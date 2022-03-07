@@ -13,14 +13,20 @@ const circuitRepo = require('./dao/circuitRepo');
 var ressource = "ressources/";
 var PersistentCircuitModel;
 var dateDeb = new Date();
-function init(){
-    circuitRepo.init(
+
+async function init(){
+
+    await modelRepo.initModels();
+    let map = modelRepo.mapModel();
+    PersistentCircuitModel = map.get("circuits");
+
+    /*circuitRepo.init(
     function(model){
         PersistentCircuitModel = model;
-    });
+    });*/
 
-    var criteria = {"resources.metadata.modes" : "bus"};
-    //var criteria = {"id" : "5c65bad88b4c4143d45c9d5c"};
+    //var criteria = {"resources.metadata.modes" : "bus"};
+    var criteria = {"id": "55ffbe0888ee387348ccb97d"};
     //a faire 620c150a0171135d9b35ecc6
     var lstUrl = [];
     
@@ -36,13 +42,13 @@ function init(){
             if (circuit.resources){
                 let url;
                 let format; 
-                let id;
-                for (let numResource in circuit.resources[0]){
+                let id = circuit.id;
+                let resource;
+                for (let numResource in circuit.resources){
                     //console.log("numResource: "+ numResource);
-   
-                    id = circuit.id;
-                    url = circuit.resources[0][numResource].original_url;
-                    format = circuit.resources[0][numResource].format;
+                    resource = circuit.resources[numResource][0];
+                    url = resource.original_url;
+                    format = resource.format;
 
                     if (format == "GTFS" & url.startsWith("http")){
                         lstUrl.push({id : id, url:url});
@@ -58,7 +64,7 @@ function init(){
             }
         }
         //console.log(lstUrl);
-        //await loadReseaux(lstUrl);
+        await loadReseaux(lstUrl);
         await loadReseauxInDB(lstUrl);
         
     });
@@ -254,6 +260,8 @@ function pad(number) {
       return '0' + number;
     }
     return Number(number);
-  }
+}
+
+init();
 
 module.exports.init = init;

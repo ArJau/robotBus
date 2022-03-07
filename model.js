@@ -1,11 +1,155 @@
 const repo = require('./dao/repo');
+var connectionDb = require('./connectionDb');
 
-var mapM = new Map();
-var mapF = new Map();
+var mapM = new Map();//nom du model => model persistant mongo
+var mapF = new Map();//map nom du fichier => nom du model
 var dbName = "TransportHoraire";
 
 
 async function initModels(){
+   var db = await connectionDb.initDb(dbName);
+
+
+   let circuit = {
+        
+    "_id": {
+        "primaryKey": true,
+        "type": "Object",
+        "required": true
+    },
+    "aom": {
+        "type": "Object",
+        "structure": {
+            "name": {
+                "key": true,
+                "type": "undefined",
+                "required": false
+            },
+            "siren": {
+                "type": "string",
+                "required": true
+            }
+        },
+        "required": true
+    },
+    "community_resources": {
+        "type": "Array",
+        "required": true
+    },
+    "covered_area": {
+        "type": "Object",
+        "structure": {
+            "name": {
+                "key": true,
+                "type": "string",
+                "required": true
+            },
+            "region": {
+                "type": "Object",
+                "structure": {
+                    "name": {
+                        "type": "string",
+                        "required": true
+                    }
+                },
+                "required": true
+            },
+            "aom": {
+                "type": "Object",
+                "structure": {
+                    "name": {
+                        "key": true,
+                        "type": "string",
+                        "required": true
+                    },
+                    "siren": {
+                        "type": "string",
+                        "required": true
+                    }
+                },
+                "required": true
+            },
+            "cities": {
+                "type": "Array",
+                "required": true
+            },
+            "type": {
+                "type": "string",
+                "required": true
+            },
+            "country": {
+                "type": "Object",
+                "structure": {
+                    "name": {
+                        "type": "string",
+                        "required": true
+                    }
+                },
+                "required": true
+            }
+        },
+        "required": true
+    },
+    "created_at": {
+        "type": "string",
+        "required": true
+    },
+    "datagouv_id": {
+        "key": true,
+        "type": "string",
+        "required": true
+    },
+    "id": {
+        "key": true,
+        "type": "string",
+        "required": true
+    },
+    "page_url": {
+        "type": "string",
+        "required": true
+    },
+    "publisher": {
+        "type": "Object",
+        "structure": {
+            "name": {
+                "type": "string",
+                "required": true
+            },
+            "type": {
+                "key": true,
+                "type": "string",
+                "required": true
+            }
+        },
+        "required": true
+    },
+    "resources": {
+        "type": "Array",
+        "required": true
+    },
+    "slug": {
+        "key": true,
+        "type": "string",
+        "required": true
+    },
+    "title": {
+        "key": true,
+        "type": "string",
+        "required": true
+    },
+    "type": {
+        "key": true,
+        "type": "string",
+        "required": true
+    },
+    "updated": {
+        "type": "string",
+        "required": true
+    }
+
+};
+    repoInit(db, 'circuits', circuit);
+
     let agency = {
         id : {"type": "string"},
         agency_id: {"type": "string"},
@@ -16,7 +160,7 @@ async function initModels(){
         agency_lang : {"type": "string"},
         id : {"type": "string"}
     };
-    repoInit(dbName, 'agencies', agency);
+    repoInit(db, 'agencies', agency);
 
 
     let stops = {
@@ -29,7 +173,7 @@ async function initModels(){
         location_type : {"type": "string"},
         parent_station : {"type": "string"}
     };
-    repoInit(dbName, 'stops', stops);
+    repoInit(db, 'stops', stops);
  
 
     let routes = {
@@ -43,7 +187,7 @@ async function initModels(){
         route_text_color: {"type": "string"},
         id : {"type": "string"}
     };
-    repoInit(dbName, 'routes', routes);
+    repoInit(db, 'routes', routes);
 
     let trips = {
         id : {"type": "string"},
@@ -53,7 +197,7 @@ async function initModels(){
         trip_headsign : {"type": "string"},
         block_id : {"type": "string"}
     };
-    repoInit(dbName, 'trips', trips)
+    repoInit(db, 'trips', trips)
         
 
     let stop_times = {
@@ -66,7 +210,7 @@ async function initModels(){
         pickup_type : {"type": "string"},
         drop_off_type : {"type": "string"}
     };
-    repoInit(dbName, 'stop_times', stop_times)
+    repoInit(db, 'stop_times', stop_times)
     
 
     let calendar = {
@@ -82,7 +226,7 @@ async function initModels(){
         start_date : {"type": "string"},
         end_date : {"type": "string"}
     };
-    repoInit(dbName, 'calendars', calendar)
+    repoInit(db, 'calendars', calendar)
     
 
     let calendar_dates = {
@@ -91,7 +235,7 @@ async function initModels(){
         date : {"type": "string"},
         exception_type : {"type": "string"}
     };
-    repoInit(dbName, 'calendar_dates', calendar_dates);
+    repoInit(db, 'calendar_dates', calendar_dates);
 
 
     let fare_attributes = {
@@ -103,7 +247,7 @@ async function initModels(){
         transfers : {"type": "string"},
         transfer_duration : {"type": "string"}
     };
-    repoInit(dbName, 'fare_attributes', fare_attributes);
+    repoInit(db, 'fare_attributes', fare_attributes);
 
 
     let fare_rules = {
@@ -114,7 +258,7 @@ async function initModels(){
         destination_id : {"type": "string"},
         contains_id : {"type": "string"}
     };
-    repoInit(dbName, 'fare_rules', fare_rules);
+    repoInit(db, 'fare_rules', fare_rules);
 
 
     let shapes = {
@@ -125,7 +269,7 @@ async function initModels(){
         shape_pt_sequence : {"type": "string"},
         shape_dist_traveled : {"type": "string"}
     };
-    repoInit(dbName, 'shapes', shapes);
+    repoInit(db, 'shapes', shapes);
 
     let pathways = {
         pathway_id : {"type": "string"},
@@ -141,7 +285,7 @@ async function initModels(){
         signposted_as : {"type": "string"},
         reversed_signposted_as : {"type": "string"}
     };
-    repoInit(dbName, 'pathways', pathways);
+    repoInit(db, 'pathways', pathways);
 
 
     let frequencies = {
@@ -152,7 +296,7 @@ async function initModels(){
         headway_secs : {"type": "string"},
         exact_times : {"type": "string"}
     };
-    repoInit(dbName, 'frequencies', frequencies);
+    repoInit(db, 'frequencies', frequencies);
 
 
     let transfers = {
@@ -168,7 +312,7 @@ async function initModels(){
         na : {"type": "string"},
         na : {"type": "string"}
     };
-    repoInit(dbName, 'transfers', transfers);
+    repoInit(db, 'transfers', transfers);
 
 /*
     let levels = {
@@ -197,8 +341,8 @@ async function initModels(){
 
 }
 
-function repoInit(dbName, nameCollection, schema){
-    repo.init(dbName, nameCollection, schema,
+function repoInit(db, nameCollection, schema){
+    repo.init(db, nameCollection, schema,
     function(model){
         mapM.set(nameCollection, model);
     });
@@ -220,9 +364,9 @@ function initMapF(){
     mapF.set('pathways.txt', 'pathways');
     mapF.set('frequencies.txt', 'frequencies');
     mapF.set('transfers.txt', 'transfers');
-    mapF.set('levels.txt', 'levels');
+    /*mapF.set('levels.txt', 'levels');
     mapF.set('translations.txt', 'translations');
-    mapF.set('attributions.txt', 'attributions');
+    mapF.set('attributions.txt', 'attributions');*/
 }
 
 function mapModel(){
@@ -233,19 +377,19 @@ function mapModel(){
  * Suppression de tous les enregistrements de  toutes les collections
  */
 async function reInitCollections(){
-    for (const i of mapM.entries()){
-        let model =  mapModel();
-        await deleteModel(model, i);
+    let mapM = mapModel();
+    for (const collectionName of mapF.values()){
+        await deleteModel(mapM.get(collectionName), collectionName);
     }
 }
 
-function deleteModel(model, i){
+function deleteModel(model, collectionName){
     return new Promise((resolve, reject)=>{
-        model.get(i[0]).deleteMany(function(err, delOK) {
+        model.deleteMany({"id": "55ffbe0888ee387348ccb97d"}, function(err, delOK) {
             if (err) 
                 reject();
             if (delOK) 
-                resolve(console.log("Collection "+ i[0] + " deleted"));
+                resolve(console.log("Collection "+ collectionName + " deleted"));
         });
     })
 }
@@ -254,9 +398,10 @@ function mapFichier(){
     return mapF;
 }
 
-initModels();
+//initModels();
 initMapF();
 
 module.exports.mapModel=mapModel;
 module.exports.mapFichier=mapFichier;
 module.exports.reInitCollections=reInitCollections;
+module.exports.initModels=initModels;
