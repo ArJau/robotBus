@@ -19,17 +19,18 @@ request(requestSettings, function (error, response, body) {
         console.log(entity.tripUpdate);
       }
     });*/
-    let feedEntity = feed.entity.slice(0,1);
+    let feedEntity = feed.entity.slice(0,4);
     for (let numEntity in feedEntity){
       if (feedEntity[numEntity].tripUpdate) {
         //console.log(feedEntity[numEntity].tripUpdate);
         stopTimeUpdate = feedEntity[numEntity].tripUpdate.stopTimeUpdate;
         for (let numSeq in stopTimeUpdate){
           let stopTime = stopTimeUpdate[numSeq];
-          let dateArrivee = new Date(stopTime.arrival.time);
-          let dateDepart = new Date(stopTime.departure.time);
-          console.log(stopTime.stopSequence + ", " + stopTime.stopId + ": " + dateArrivee.getTime() + "-" + dateDepart.getTime());
+          let dateArrivee = new Date(stopTime.arrival.time.low * 1000);
+          let dateDepart = new Date(stopTime.departure.time.low * 1000);
+          console.log(stopTime.stopSequence + ", " + stopTime.stopId + ": " + dateArrivee.toLocaleTimeString() + "-" + dateDepart.toLocaleTimeString());
         }
+        console.log("-----------------------------------------------------------------");
       }
     }
   }
