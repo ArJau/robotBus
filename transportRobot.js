@@ -8,7 +8,6 @@ const lineReader = require('line-reader');
 const csvtojson = require('csvtojson');
 
 var modelRepo = require('./model');
-const circuitRepo = require('./dao/circuitRepo');
 
 var ressource = "ressources/";
 var PersistentCircuitModel;
@@ -28,6 +27,7 @@ async function init(){
     //var criteria = {"resources.metadata.modes" : "bus"};
     var criteria = {"id": "55ffbe0888ee387348ccb97d"};
     //a faire 620c150a0171135d9b35ecc6
+    //a faire 6036e9df9d7c9b462c7ce5a4
     var lstUrl = [];
     
     PersistentCircuitModel.find(criteria, async function(err, lstCircuits){
@@ -44,7 +44,7 @@ async function init(){
                 let format; 
                 let id = circuit.id;
                 let resource;
-                for (let numResource in circuit.resources){
+                for (let numResource in circuit.resources){// a faire prendre les derniers fichier mis a jour
                     //console.log("numResource: "+ numResource);
                     resource = circuit.resources[numResource][0];
                     url = resource.original_url;

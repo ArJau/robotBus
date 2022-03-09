@@ -1,5 +1,6 @@
 var GtfsRealtimeBindings = require('gtfs-realtime-bindings');
 var request = require('request');
+var fs = require('fs');
 
 
 //{'resources.format': 'gtfs-rt'}
@@ -13,22 +14,17 @@ request(requestSettings, function (error, response, body) {
   if (!error && response.statusCode == 200) {
     
     var feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(body);
-    //log(feed.entity);
-    /*feed.entity.forEach(function(entity) {
-      if (entity.tripUpdate) {
-        console.log(entity.tripUpdate);
-      }
-    });*/
-    let feedEntity = feed.entity.slice(0,4);
+    let feedEntity = feed.entity//.slice(0,4);
     for (let numEntity in feedEntity){
       if (feedEntity[numEntity].tripUpdate) {
-        //console.log(feedEntity[numEntity].tripUpdate);
         stopTimeUpdate = feedEntity[numEntity].tripUpdate.stopTimeUpdate;
         for (let numSeq in stopTimeUpdate){
           let stopTime = stopTimeUpdate[numSeq];
           let dateArrivee = new Date(stopTime.arrival.time.low * 1000);
           let dateDepart = new Date(stopTime.departure.time.low * 1000);
-          console.log(stopTime.stopSequence + ", " + stopTime.stopId + ": " + dateArrivee.toLocaleTimeString() + "-" + dateDepart.toLocaleTimeString());
+          log(stopTime.stopSequence + ". " + stopTime.stopId 
+          + ". " + dateArrivee.getUTCDate() + " " + dateArrivee.toLocaleTimeString() 
+          + "." + dateDepart.getUTCDate()  + " " + dateDepart.toLocaleTimeString(), true);
         }
         console.log("-----------------------------------------------------------------");
       }
