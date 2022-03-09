@@ -24,10 +24,13 @@ async function init(){
         PersistentCircuitModel = model;
     });*/
 
-    //var criteria = {"resources.metadata.modes" : "bus"};
-    var criteria = {"id": "55ffbe0888ee387348ccb97d"};
+    var criteria;
+    //criteria = {"resources.metadata.modes" : "bus"};
+    criteria = {"id": "56b0c2fba3a7294d39b88a86"};
+    //criteria = {};
     //a faire 620c150a0171135d9b35ecc6
     //a faire 6036e9df9d7c9b462c7ce5a4
+    //56b0c2fba3a7294d39b88a86 : toulouse
     var lstUrl = [];
     
     PersistentCircuitModel.find(criteria, async function(err, lstCircuits){
@@ -64,7 +67,7 @@ async function init(){
             }
         }
         //console.log(lstUrl);
-        await loadReseaux(lstUrl);
+        //await loadReseaux(lstUrl);
         await loadReseauxInDB(lstUrl);
         
     });
@@ -215,14 +218,28 @@ async function analyseRep(rep, id){
     //});
 }
 
+function calculIdPosition(lat, lon){
+    lat = Number(lat) + 90;//+90 pour n'avoir que des valeur positive
+    lon = Number(lon) + 180;// +180 pour n'avoir que des valeur positive
+    let idPosition;
+    let sLat = ""+ (Math.floor(lat*10));
+    let sLon =  ""+ (Math.floor(Math.floor(Math.floor(lon*10)/2))*2);
 
+    idPosition  = sLat + sLon;
+    return idPosition;
+}
 
 async function insertDb(fileName, id, model, tableauJson){
     return new Promise((resolve, reject)=>{
         try{
             for (let i in tableauJson) {
                 tableauJson[i]["id"] = id;
+
+                if (model == "stops"){
+                    tableauJson[i]["idPosition"] = calculIdPosition(tableauJson[i].stop_lat, tableauJson[i].stop_lon);
+                }
             }
+           
             //console.log(tableauJson);
             let map = modelRepo.mapModel();
             map.get(model).insertMany(tableauJson, (err, result) => {

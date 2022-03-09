@@ -157,8 +157,7 @@ async function initModels(){
         agency_url : {"type": "string"},
         agency_timezone : {"type": "string"},
         agency_phone : {"type": "string"},
-        agency_lang : {"type": "string"},
-        id : {"type": "string"}
+        agency_lang : {"type": "string"}
     };
     repoInit(db, 'agencies', agency);
 
@@ -168,10 +167,11 @@ async function initModels(){
         stop_id: {"type": "string"},
         level_id : {"type": "string"},
         stop_name : {"type": "string"},
-        stop_lat : {"type": "string"},
-        stop_lon : {"type": "string"},
+        stop_lat : {"type": "number"},
+        stop_lon : {"type": "number"},
         location_type : {"type": "string"},
-        parent_station : {"type": "string"}
+        parent_station : {"type": "string"},
+        idPosition: {"type": "string"}
     };
     repoInit(db, 'stops', stops);
  
@@ -264,8 +264,8 @@ async function initModels(){
     let shapes = {
         id : {"type": "string"},
         shape_id: {"type": "string"},
-        shape_pt_lat : {"type": "string"},
-        shape_pt_lon : {"type": "string"},
+        shape_pt_lat : {"type": "number"},
+        shape_pt_lon : {"type": "number"},
         shape_pt_sequence : {"type": "string"},
         shape_dist_traveled : {"type": "string"}
     };
@@ -309,7 +309,6 @@ async function initModels(){
         to_route_id : {"type": "string"},
         from_trip_id : {"type": "string"},
         to_trip_id : {"type": "string"},
-        na : {"type": "string"},
         na : {"type": "string"}
     };
     repoInit(db, 'transfers', transfers);
@@ -351,9 +350,9 @@ function repoInit(db, nameCollection, schema){
  * Mapping entre le nom du fichier de description et de la collection.
  */
 function initMapF(){
-    mapF.set('agency.txt', 'agencies');
+    //mapF.set('agency.txt', 'agencies');
     mapF.set('stops.txt', 'stops');
-    mapF.set('routes.txt', 'routes');
+    /*mapF.set('routes.txt', 'routes');
     mapF.set('trips.txt', 'trips');
     mapF.set('stop_times.txt', 'stop_times');
     mapF.set('calendar.txt', 'calendars');
@@ -363,7 +362,7 @@ function initMapF(){
     mapF.set('shapes.txt', 'shapes');
     mapF.set('pathways.txt', 'pathways');
     mapF.set('frequencies.txt', 'frequencies');
-    mapF.set('transfers.txt', 'transfers');
+    mapF.set('transfers.txt', 'transfers');*/
     /*mapF.set('levels.txt', 'levels');
     mapF.set('translations.txt', 'translations');
     mapF.set('attributions.txt', 'attributions');*/
@@ -385,7 +384,8 @@ async function reInitCollections(){
 
 function deleteModel(model, collectionName){
     return new Promise((resolve, reject)=>{
-        model.deleteMany({"id": "55ffbe0888ee387348ccb97d"}, function(err, delOK) {
+        model.deleteMany({"id": "56b0c2fba3a7294d39b88a86"}, function(err, delOK) {
+        //model.deleteMany({}, function(err, delOK) {
             if (err) 
                 reject();
             if (delOK) 
