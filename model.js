@@ -9,6 +9,12 @@ var dbName = "TransportHoraire";
 async function initModels(){
    var db = await connectionDb.initDb(dbName);
 
+   
+
+   let realTime = {
+
+   };
+    repoInit(db, 'realTime', realTime);
 
    let circuit = {
         
@@ -147,7 +153,7 @@ async function initModels(){
         "required": true
     }
 
-};
+    };
     repoInit(db, 'circuits', circuit);
 
     let agency = {
@@ -384,8 +390,8 @@ async function reInitCollections(){
 
 function deleteModel(model, collectionName){
     return new Promise((resolve, reject)=>{
-        model.deleteMany({"id": "56b0c2fba3a7294d39b88a86"}, function(err, delOK) {
-        //model.deleteMany({}, function(err, delOK) {
+        //model.deleteMany({"id": "56b0c2fba3a7294d39b88a86"}, function(err, delOK) {
+        model.deleteMany({}, function(err, delOK) {
             if (err) 
                 reject();
             if (delOK) 

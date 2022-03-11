@@ -26,12 +26,13 @@ async function init(){
 
     var criteria;
     //criteria = {"resources.metadata.modes" : "bus"};
-    criteria = {"id": "56b0c2fba3a7294d39b88a86"};
-    //criteria = {};
+    //criteria = {"id": "56b0c2fba3a7294d39b88a86"};
+    criteria = {};
     //a faire 620c150a0171135d9b35ecc6
     //a faire 6036e9df9d7c9b462c7ce5a4
     //56b0c2fba3a7294d39b88a86 : toulouse
     var lstUrl = [];
+    var lstUrlRt = [];
     
     PersistentCircuitModel.find(criteria, async function(err, lstCircuits){
         if(err){
@@ -41,7 +42,7 @@ async function init(){
         //nbCircuits = lstCircuits.length;
         
         for (i in lstCircuits){
-            var circuit = lstCircuits[i];    
+            let circuit = lstCircuits[i];    
             if (circuit.resources){
                 let url;
                 let format; 
@@ -68,7 +69,8 @@ async function init(){
         }
         //console.log(lstUrl);
         //await loadReseaux(lstUrl);
-        await loadReseauxInDB(lstUrl);
+        //await loadReseauxInDB(lstUrl);
+        consolidationTrajet();
         
     });
 }
@@ -256,6 +258,69 @@ async function insertDb(fileName, id, model, tableauJson){
     });
 }
 
+/**
+ * Conncaténation de la table routes, trip, stop, et stops_time 
+ * afin de créer une nouvelle table optimisée pour le requetage.
+ */
+async function consolidationTrajet(){
+    let map = modelRepo.mapModel();
+    let RoutesCollec = map.get("routes");
+    let TripsCollec = map.get("trips");
+    let StopTimesCollec = map.get("stop_times");
+    let StopsCollec = map.get("stops");
+
+    let criteriaRoute = {id:"56b0c2fba3a7294d39b88a86"};
+    await RoutesCollec.find(criteriaRoute, async function(err, lstRoutes){//on récupere toutes les routes
+        if(err){console.log("err: " + err);}
+        
+        for (let numRoute in lstRoutes){
+            let route = lstRoutes[numRoute];    
+            log("route.route_long_name : " + route.route_long_name)
+            let criteriaTrip = {id:route.id, route_id:route.route_id};
+            
+            await TripsCollec.find(criteriaTrip, async function(err, trip){//on récupere le premier trip de chaque route
+                if(err){console.log("err: " + err);}
+                log("trip.trip_headsign : " + trip.trip_headsign);
+                let criteriaStopTimes = {id : trip.id , trip_id : trip.trip_id};
+
+                await StopTimesCollec.find(criteriaStopTimes, async function(err, lstStopsTime){//on recupere tous les stops du trip
+                    for (let numStopTime in lstStopsTime){//on boucle sur chaque stopTime 
+                        let stopTime = lstStopsTime[numStopTime];
+                        if(err){console.log("err: " + err);}
+                        log("stopTime.stop_sequence : " + stopTime.stop_sequence)
+                        let criteriaStop = {id : stopTime.id , stop_id : stopTime.stop_id};
+                        await StopsCollec.find(criteriaStop, async function(err, lstStops){//pour enfin recuperer chaque stop
+                            if(err){console.log("err: " + err);}
+                            log(filtreStops(lstStops));
+                            log("--------------------------");
+                        });
+                    }
+
+                });
+
+            }).limit(1);
+        } 
+    });
+}
+
+function filtreStops(lstStops){
+    let map = new Map();
+    let stopF;
+    let stop;
+    for (let i in lstStops){
+        stop = lstStops[i];
+        if (!map.get(stop.stop_name)){
+            stopF = new stopFiltre();
+            stopF.id = stop.id;
+            stopF.name = stop.stop_name;
+            map.set(stop.stop_name, stopF);
+        }
+        map.get(stop.stop_name).coord.push({lon:stop.stop_lon, lat:stop.stop_lat});
+        
+    }
+    return Array.from(map.values());
+}
+
 
 
 function log(txt, isFichier){
@@ -263,7 +328,7 @@ function log(txt, isFichier){
     const content = date.toISOString()  + ", " + txt;
 
     if (isFichier){
-        var nomFichier = pad(date.getUTCFullYear() + (pad(date.getUTCMonth()) + 1) + date.getUTCDate()) +  ".log";
+        var nomFichier = date.getUTCFullYear() + (pad(date.getUTCMonth()+ 1)) + date.getUTCDate() + ".log";
        
         fs.appendFile('log/' + nomFichier, content + "\n", function (err) {
             if (err) {throw err};
