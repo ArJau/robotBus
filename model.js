@@ -369,11 +369,11 @@ function repoInit(db, nameCollection, schema){
  */
 function initMapF(){
     //mapF.set('agency.txt', 'agencies');
-    mapF.set('stops.txt', 'stops');
-    /*mapF.set('routes.txt', 'routes');
-    mapF.set('trips.txt', 'trips');
+    //mapF.set('stops.txt', 'stops');
+    //mapF.set('routes.txt', 'routes');
+    //mapF.set('trips.txt', 'trips');
     mapF.set('stop_times.txt', 'stop_times');
-    mapF.set('calendar.txt', 'calendars');
+    /*mapF.set('calendar.txt', 'calendars');
     mapF.set('calendar_dates.txt', 'calendar_dates');
     mapF.set('fare_attributes.txt', 'fare_attributes');
     mapF.set('fare_rules.txt', 'fare_rules');

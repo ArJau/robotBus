@@ -26,8 +26,8 @@ async function init(){
 
     var criteria;
     //criteria = {"resources.metadata.modes" : "bus"};
-    //criteria = {"id": "56b0c2fba3a7294d39b88a86"};
-    criteria = {};
+    criteria = {"id": "5b3b3de988ee38708ada1789"};
+    //criteria = {};
     //a faire 620c150a0171135d9b35ecc6
     //a faire 6036e9df9d7c9b462c7ce5a4
     //56b0c2fba3a7294d39b88a86 : toulouse
@@ -48,6 +48,8 @@ async function init(){
                 let format; 
                 let id = circuit.id;
                 let resource;
+                let numResourceSave = -1;
+                let updated = new Date(circuit.resources[0][0].updated);
                 for (let numResource in circuit.resources){// a faire prendre les derniers fichier mis a jour
                     //console.log("numResource: "+ numResource);
                     resource = circuit.resources[numResource][0];
@@ -55,11 +57,17 @@ async function init(){
                     format = resource.format;
 
                     if (format == "GTFS" & url.startsWith("http")){
-                        lstUrl.push({id : id, url:url});
+                        if (updated.getTime() >= new Date(resource.updated).getTime()){
+                            updated = new Date(resource.updated);
+                            numResourceSave = numResource;//on prend le dernier
+                        }
+                        //lstUrl.push({id : id, url:url});
                     }else{
                         log("FORMAT: " + format + ", URL: " + url + ", id: " + id);
                     }
-                   
+                }
+                if (numResourceSave != -1){
+                    lstUrl.push({id : id, url:circuit.resources[numResourceSave][0].original_url});
                 }
                 //console.log(url);
             }
@@ -69,8 +77,8 @@ async function init(){
         }
         //console.log(lstUrl);
         //await loadReseaux(lstUrl);
-        //await loadReseauxInDB(lstUrl);
-        consolidationTrajet();
+        await loadReseauxInDB(lstUrl);
+        //consolidationTrajet();
         
     });
 }
