@@ -342,7 +342,19 @@ async function initModels(){
         feed_lang : {"type": "string"},
         feed_id : {"type": "string"}
     };
-    repoInit(dbName, 'feed_info', feed_info);
+    repoInit(db, 'feed_info', feed_info);
+
+    let trajets = {
+        id : {"type": "string"},
+        route_id: {"type": "string"},
+        route_text_color : {"type": "string"},
+        route_color : {"type": "string"},
+        route_long_name : {"type": "string"},
+        route_short_name : {"type": "string"},
+        idPosition : [],
+        stops : []
+    };
+    repoInit(db, 'trajets', trajets);
 
 }
 

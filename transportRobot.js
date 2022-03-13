@@ -258,6 +258,17 @@ async function insertDb(fileName, id, model, tableauJson){
     });
 }
 
+class Trajet{
+    id;
+    route_text_color;
+    route_color;
+    route_long_name;
+    route_short_name;
+    route_id;
+    idPosition = [];
+    stops  = [];
+}
+
 /**
  * Conncaténation de la table routes, trip, stop, et stops_time 
  * afin de créer une nouvelle table optimisée pour le requetage.
@@ -270,50 +281,97 @@ async function consolidationTrajet(){
     let StopsCollec = map.get("stops");
 
     let criteriaRoute = {id:"56b0c2fba3a7294d39b88a86"};
+    let lstTrajet = [];
     await RoutesCollec.find(criteriaRoute, async function(err, lstRoutes){//on récupere toutes les routes
         if(err){console.log("err: " + err);}
         
         for (let numRoute in lstRoutes){
-            let route = lstRoutes[numRoute];    
-            log("route.route_long_name : " + route.route_long_name)
-            let criteriaTrip = {id:route.id, route_id:route.route_id};
-            
-            await TripsCollec.find(criteriaTrip, async function(err, trip){//on récupere le premier trip de chaque route
-                if(err){console.log("err: " + err);}
-                log("trip.trip_headsign : " + trip.trip_headsign);
-                let criteriaStopTimes = {id : trip.id , trip_id : trip.trip_id};
+            let trajet = new Trajet();
+            let route = lstRoutes[numRoute];
+            if(route.route_short_name == "101"){
 
+
+            //log(numRoute + " : route.route_long_name : " + route.route_long_name)
+            //trajet.id = route.id;
+            trajet.route_id = route.route_id;
+            trajet.route_long_name = route.route_long_name;
+            trajet.route_short_name = route.route_short_name;
+            trajet.route_text_color = route.route_text_color;
+            trajet.route_color = route.route_color;
+            let criteriaTrip = {id:route.id, route_id:route.route_id};
+            await TripsCollec.find(criteriaTrip, async function(err, lstTrips){//on récupere le premier trip de chaque route
+                let trip = lstTrips[0];
+                if(err){console.log("err: " + err);}
+                //log("trip.trip_headsign : " + trip.trip_headsign);
+
+                let criteriaStopTimes = {id : trip.id , trip_id : trip.trip_id};
                 await StopTimesCollec.find(criteriaStopTimes, async function(err, lstStopsTime){//on recupere tous les stops du trip
                     for (let numStopTime in lstStopsTime){//on boucle sur chaque stopTime 
                         let stopTime = lstStopsTime[numStopTime];
                         if(err){console.log("err: " + err);}
-                        log("stopTime.stop_sequence : " + stopTime.stop_sequence)
+                        //log("stopTime.stop_sequence : " + stopTime.stop_sequence);
+
                         let criteriaStop = {id : stopTime.id , stop_id : stopTime.stop_id};
-                        await StopsCollec.find(criteriaStop, async function(err, lstStops){//pour enfin recuperer chaque stop
+                        await StopsCollec.find(criteriaStop, async function(err, lstStop){//pour enfin recuperer chaque stop
                             if(err){console.log("err: " + err);}
-                            log(filtreStops(lstStops));
-                            log("--------------------------");
-                        });
+
+                            stops = new Stops();
+                            let stop = lstStop[0];
+                            stops.id = stop.id;
+                            stops.stop_name = stop.stop_name;
+                            stops.idPosition = calculIdPosition(stop.stop_lat, stop.stop_lon);
+                            stops.stop_lat = stop.stop_lat;
+                            stops.stop_lon = stop.stop_lon;
+                            stops.stop_sequence = stopTime.stop_sequence;
+                            trajet.stops.push(stops);
+                            //trajet.stops.push(filtreStops(lstStops));
+                            //trajet.stops[trajet.stops.length-1].stop_sequence = stopTime.stop_sequence;
+                        }).clone();
                     }
+                    let mapIdPosition = new Map();
+                    for (numStop in trajet.stops){
+                        let stop  = trajet.stops[numStop];
+                        if (!mapIdPosition.get(stop.idPosition)){
+                            mapIdPosition.set(stop.idPosition, stop.idPosition);
+                        }
+                    }
+                    trajet.idPosition.push(Array.from(mapIdPosition.values()));
+                    let lstTrajet = []
+                    lstTrajet.push(trajet);
+                    insertDb("pas de fichier", route.id, "trajets", lstTrajet);
 
-                });
+                    //lstTrajet.push(trajet);
+                    //log(JSON.stringify(trajet));
+                }).clone();
+            }).clone().limit(1);
+        }
+        
+        }
+    }).clone();
+}
 
-            }).limit(1);
-        } 
-    });
+class Stops{
+    id;
+    coord = [];
+    stop_name;
+    stop_sequence;
+    stop_lat;
+    stop_lon;
+    idPosition;
 }
 
 function filtreStops(lstStops){
     let map = new Map();
-    let stopF;
+    let stops;
     let stop;
     for (let i in lstStops){
         stop = lstStops[i];
         if (!map.get(stop.stop_name)){
-            stopF = new stopFiltre();
-            stopF.id = stop.id;
-            stopF.name = stop.stop_name;
-            map.set(stop.stop_name, stopF);
+            stops = new Stops();
+            stops.id = stop.id;
+            stops.stop_name = stop.stop_name;
+            stops.idPosition = calculIdPosition(stop.stop_lat, stop.stop_lon)
+            map.set(stop.stop_name, stops);
         }
         map.get(stop.stop_name).coord.push({lon:stop.stop_lon, lat:stop.stop_lat});
         
