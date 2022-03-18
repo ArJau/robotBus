@@ -368,20 +368,20 @@ function repoInit(db, nameCollection, schema){
  * Mapping entre le nom du fichier de description et de la collection.
  */
 function initMapF(){
-    //mapF.set('agency.txt', 'agencies');
-    //mapF.set('stops.txt', 'stops');
-    //mapF.set('routes.txt', 'routes');
-    //mapF.set('trips.txt', 'trips');
-    mapF.set('stop_times.txt', 'stop_times');
-    /*mapF.set('calendar.txt', 'calendars');
+    mapF.set('agency.txt', 'agencies');
+    mapF.set('stops.txt', 'stops');
+    mapF.set('routes.txt', 'routes');
+    mapF.set('trips.txt', 'trips');
+    /*mapF.set('stop_times.txt', 'stop_times');
+    mapF.set('calendar.txt', 'calendars');
     mapF.set('calendar_dates.txt', 'calendar_dates');
     mapF.set('fare_attributes.txt', 'fare_attributes');
     mapF.set('fare_rules.txt', 'fare_rules');
     mapF.set('shapes.txt', 'shapes');
     mapF.set('pathways.txt', 'pathways');
     mapF.set('frequencies.txt', 'frequencies');
-    mapF.set('transfers.txt', 'transfers');*/
-    /*mapF.set('levels.txt', 'levels');
+    mapF.set('transfers.txt', 'transfers');
+    mapF.set('levels.txt', 'levels');
     mapF.set('translations.txt', 'translations');
     mapF.set('attributions.txt', 'attributions');*/
 }
