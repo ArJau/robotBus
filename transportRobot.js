@@ -279,6 +279,19 @@ class Trajet {
     stops = [];
 }
 
+
+class Stops {
+    //coord = [];
+    stop_name;
+    stop_id;
+    stop_lat;
+    stop_lon;
+    idPosition;
+}
+class Pos {
+    pos;
+}
+
 /**
  * Conncaténation de la table routes, trip, stop, et stops_time 
  * afin de créer une nouvelle table optimisée pour le requetage.
@@ -287,8 +300,9 @@ async function consolidationTrajet() {
     let map = modelRepo.mapModel();
     let RoutesCollec = map.get("routes");
 
-    //let criteriaRoute = { id: "56b0c2fba3a7294d39b88a86" };
-    criteriaRoute = {};
+    let criteriaRoute;
+    criteriaRoute = { id: "56b0c2fba3a7294d39b88a86" };
+    //criteriaRoute = {};
     try{
         await RoutesCollec.find(criteriaRoute, async function (err, lstRoutes) {//on récupere toutes les routes
             if (err) { console.log("err: " + err); }
@@ -318,87 +332,78 @@ async function analyseRoute(route, numRoute) {
                 let criteriaTrip = { id: route.id, route_id: route.route_id };
                 TripsCollec.find(criteriaTrip, function (err, lstTrips) {//on récupere le premier trip de chaque route
                     let trip = lstTrips[0];
-                    if (err) { console.log("err: " + err); }
                     //log("trip.trip_headsign : " + trip.trip_headsign);
-
-                    let criteriaStopTimes = { id: route.id, trip_id: trip.trip_id };
-                    StopTimesCollec.find(criteriaStopTimes, function (err, lstStopsTime) {//on recupere tous les stops du trip
-                        log(numRoute + " : route.route_long_name : " + route.route_long_name)
-                        let mapStopsStopTime = new Map();
-                        for (let numStopTime in lstStopsTime) {//on boucle sur chaque stopTime 
-                            let stopsTime = lstStopsTime[numStopTime];
-                            mapStopsStopTime.set(stopsTime.stop_sequence, stopsTime.stop_id);//sert pour garder l'ordre des stops
-                        }
-
-                        if (err) { console.log("err: " + err); }
-                        //log("stopTime.stop_sequence : " + stopTime.stop_sequence);
-
-                        let criteriaStop = { id: route.id, stop_id: { $in: Array.from(mapStopsStopTime.values()) } };
-                        StopsCollec.find(criteriaStop, function (err, lstStop) {//pour enfin recuperer chaque stop
-                            let trajet = new Trajet();
-                            log("analyse" + route.route_short_name);
-                            //trajet.id = route.id;
-                            trajet.route_id = route.route_id;
-                            trajet.route_long_name = route.route_long_name;
-                            trajet.route_short_name = route.route_short_name;
-                            trajet.route_text_color = route.route_text_color;
-                            trajet.route_color = route.route_color;
-
-                            let mapStop = new Map(); //let mapStop = lstStop.map(lstStop.stop_id => lstStop);
-                            for (let numStop in lstStop) {
-                                mapStop.set(lstStop[numStop].stop_id, lstStop[numStop]);//sert pour garder l'ordre des stops
+                    if (trip){
+                        let criteriaStopTimes = { id: route.id, trip_id: trip.trip_id };
+                        StopTimesCollec.find(criteriaStopTimes, function (err, lstStopsTime) {//on recupere tous les stops du trip
+                            log(numRoute + " : route.route_long_name : " + route.route_long_name)
+                            let mapStopsStopTime = new Map();
+                            for (let numStopTime in lstStopsTime) {//on boucle sur chaque stopTime 
+                                let stopsTime = lstStopsTime[numStopTime];
+                                mapStopsStopTime.set(stopsTime.stop_sequence, stopsTime.stop_id);//sert pour garder l'ordre des stops
                             }
+                            //log("stopTime.stop_sequence : " + stopTime.stop_sequence);
 
-                            for (let numStopTime in lstStopsTime) {
-                                let stop = mapStop.get(mapStopsStopTime.get(lstStopsTime[numStopTime].stop_sequence));
-                                if (stop){
-                                    let stops = new Stops();
-                                    //stops.id = stop.id;
-                                    log("    " + lstStopsTime[numStopTime].stop_sequence + " :" + stop.stop_name)
-                                    stops.stop_name = stop.stop_name;
-                                    stops.idPosition = calculIdPosition(stop.stop_lat, stop.stop_lon);
-                                    stops.stop_lat = stop.stop_lat;
-                                    stops.stop_lon = stop.stop_lon;
-                                    stops.stop_sequence = mapStopsStopTime.get(stop.stop_id);
-                                    trajet.stops.push(stops);
+                            let criteriaStop = { id: route.id, stop_id: { $in: Array.from(mapStopsStopTime.values()) } };
+                            StopsCollec.find(criteriaStop, function (err, lstStop) {//pour enfin recuperer chaque stop
+                                let trajet = new Trajet();
+                                log("analyse" + route.route_short_name);
+                                //trajet.id = route.id;
+                                trajet.route_id = route.route_id;
+                                trajet.route_long_name = route.route_long_name;
+                                trajet.route_short_name = route.route_short_name;
+                                trajet.route_text_color = route.route_text_color;
+                                trajet.route_color = route.route_color;
+
+                                let mapStop = new Map(); //let mapStop = lstStop.map(lstStop.stop_id => lstStop);
+                                for (let numStop in lstStop) {
+                                    mapStop.set(lstStop[numStop].stop_id, lstStop[numStop]);//sert pour garder l'ordre des stops
                                 }
-                            }
 
-                            let mapIdPosition = new Map();
-                            for (numStop in trajet.stops) {
-                                let stop = trajet.stops[numStop];
-                                if (!mapIdPosition.get(stop.idPosition)) {
-                                    mapIdPosition.set(stop.idPosition, stop.idPosition);
+                                for (let numStopTime in lstStopsTime) {
+                                    let stop = mapStop.get(mapStopsStopTime.get(lstStopsTime[numStopTime].stop_sequence));
+                                    if (stop){
+                                        let stops = new Stops();
+                                        //stops.id = stop.id;
+                                        log("    " + lstStopsTime[numStopTime].stop_sequence + ": " + stop.stop_name)
+                                        stops.stop_name = stop.stop_name;
+                                        stops.idPosition = calculIdPosition(stop.stop_lat, stop.stop_lon);
+                                        stops.stop_id = stop.stop_id;
+                                        stops.stop_lat = stop.stop_lat;
+                                        stops.stop_lon = stop.stop_lon;
+                                        stops.stop_sequence = mapStopsStopTime.get(stop.stop_id);
+                                        trajet.stops.push(stops);
+                                    }
                                 }
-                            }
-                            trajet.idPosition.push(Array.from(mapIdPosition.values()));
-                            let lstTrajet = []
-                            lstTrajet.push(trajet);
-                            insertDb("Consolidation du trajet", route.id, "trajets", lstTrajet);
-                            return resolve(true);
-                        }).clone().catch(error => { throw error});
-                    }).clone().sort({ stop_sequence: -1}).catch(error => { throw error});
+
+                                let mapIdPosition = new Map();
+                                for (numStop in trajet.stops) {
+                                    let stop = trajet.stops[numStop];
+                                    if (!mapIdPosition.get(stop.idPosition)) {
+                                        mapIdPosition.set(stop.idPosition, stop.idPosition);
+                                        let position = new Pos();
+                                        position.pos = stop.idPosition;
+                                        trajet.idPosition.push(position);
+                                    }
+                                }
+                                let lstTrajet = [];
+                                lstTrajet.push(trajet);
+                                insertDb("Consolidation du trajet", route.id, "trajets", lstTrajet);
+                                return resolve(true);
+                            }).clone().catch(error => { throw error});
+                        }).clone().sort({ stop_sequence: -1}).catch(error => { throw error});
+                    }
                 }).clone().limit(1).catch(error => { throw error});
 
-            //}
-            //else {
-            //    reject(false);
-            //}
+            /*}
+            else {
+                reject(false);
+            }*/
         } catch (err) {
             reject(log(err));
         }
 
     });
-}
-
-class Stops {
-    id;
-    //coord = [];
-    stop_name;
-    stop_sequence;
-    stop_lat;
-    stop_lon;
-    idPosition;
 }
 
 function filtreStops(lstStops) {
