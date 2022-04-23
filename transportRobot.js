@@ -4,101 +4,151 @@ const path = require('path');
 
 const unzipStream = require('unzip-stream');
 var request = require('request');
-const lineReader = require('line-reader');
-const csvtojson = require('csvtojson');
+const nReadlines = require('n-readlines');
 
 var modelRepo = require('./model');
-const { CLIENT_RENEG_WINDOW } = require('tls');
 
 var ressource = "ressources/";
 var PersistentCircuitModel;
 var dateDeb = new Date();
 
+//a exporter dans un autre fichier
+class UrlReseau {
+    id;
+    url;
+    rt;
+}
+class Trajet {
+    id;
+    route_text_color;
+    route_color;
+    route_long_name;
+    route_short_name;
+    route_id;
+    idPosition = [];
+    stops = [];
+}
+class Stops {
+    //coord = [];
+    stop_name;
+    stop_id;
+    stop_lat;
+    stop_lon;
+    idPosition;
+}
+class Pos {
+    pos;
+}
+
 async function init() {
 
     await modelRepo.initModels();
-    let map = modelRepo.mapModel();
-    PersistentCircuitModel = map.get("circuits");
+    var mapUrl = await recupereUrl();
+    //await loadReseaux(mapUrl);
+    await loadReseauxInDB(mapUrl);
+}
 
-    /*circuitRepo.init(
-    function(model){
-        PersistentCircuitModel = model;
-    });*/
+async function recupereUrl() {
+    return new Promise((resolve, reject) => {
+        try {
+            let map = modelRepo.mapModel();
+            let mapUrl = new Map();
+            PersistentCircuitModel = map.get("circuits");
 
-    var criteria;
-    criteria = { "resources.metadata.modes": "bus" };
-    //criteria = {"id": "56b0c2fba3a7294d39b88a86"};
-    //criteria = {};
-    //a faire 620c150a0171135d9b35ecc6
-    //a faire 6036e9df9d7c9b462c7ce5a4
-    //56b0c2fba3a7294d39b88a86 : toulouse
-    var lstUrl = [];
-    var lstUrlRt = [];
+            /*circuitRepo.init(
+            function(model){
+                PersistentCircuitModel = model;
+            });*/
 
-    PersistentCircuitModel.find(criteria, async function (err, lstCircuits) {
-        if (err) {
-            console.log("err: " + err);
-        }
-        //lstCircuits = lstCircuits.slice(0,10);
-        //nbCircuits = lstCircuits.length;
+            var criteria;
+            criteria = { "resources.metadata.modes": "bus" };
+            criteria = { "id": "56b0c2fba3a7294d39b88a86" };//brest
+            //criteria = {};
+            //a faire 620c150a0171135d9b35ecc6
+            //a faire 6036e9df9d7c9b462c7ce5a4
+            //criteria = { "id": "56b0c2fba3a7294d39b88a86" };//toulouse
 
-        for (i in lstCircuits) {
-            let circuit = lstCircuits[i];
-            if (circuit.resources) {
-                let url;
-                let format;
-                let id = circuit.id;
-                let resource;
-                let numResourceSave = -1;
-                let updated = new Date(circuit.resources[0][0].updated);
-                for (let numResource in circuit.resources) {// a faire prendre les derniers fichier mis a jour
-                    //console.log("numResource: "+ numResource);
-                    resource = circuit.resources[numResource][0];
-                    url = resource.original_url;
-                    format = resource.format;
+            PersistentCircuitModel.find(criteria, async function (err, lstCircuits) {
+                if (err) {
+                    console.log("err: " + err);
+                }
+                for (i in lstCircuits) {
+                    let circuit = lstCircuits[i];
+                    if (circuit.resources) {
+                        let url;
+                        let format;
+                        let id = circuit.id;
+                        let resource;
+                        let numResourceSave = -1;
+                        let updated;
+                        let indiceGTFS = 0;
+                        for (let numResource in circuit.resources) {
+                            //console.log("numResource: "+ numResource);
+                            resource = circuit.resources[numResource][0];
+                            url = resource.original_url;
+                            format = resource.format;
 
-                    if (format == "GTFS" & url.startsWith("http")) {
-                        if (updated.getTime() <= new Date(resource.updated).getTime()) {
-                            updated = new Date(resource.updated);
-                            numResourceSave = numResource;//on prend le dernier
+
+                            if (format == "GTFS" & url.startsWith("http")) {
+                                if (indiceGTFS == 0) {
+                                    updated = new Date(resource.updated);
+                                    indiceGTFS++;
+                                }
+                                if (updated.getTime() <= new Date(resource.updated).getTime()) {
+                                    updated = new Date(resource.updated);
+                                    numResourceSave = numResource;//on prend le dernier
+                                }
+                            } else if (format == "gtfs-rt") {
+                                if (!mapUrl.get(id)) {
+                                    mapUrl.set(id, new UrlReseau())
+                                }
+                                let urlReseau = mapUrl.get(id)
+                                urlReseau.rt = true;
+                                urlReseau.id = id;
+                            } else {
+                                //log("FORMAT: " + format + ", URL: " + url + ", id: " + id);
+                            }
                         }
-                        //lstUrl.push({id : id, url:url});
-                    } else {
-                        //log("FORMAT: " + format + ", URL: " + url + ", id: " + id);
+                        if (numResourceSave != -1) {
+                            if (!mapUrl.get(id)) {
+                                mapUrl.set(id, new UrlReseau())
+                            }
+                            let urlReseau = mapUrl.get(id)
+                            urlReseau.id = id;
+                            urlReseau.url = circuit.resources[numResourceSave][0].original_url;
+
+                            numResourceSave = -1;//on reinitialise la varible pour le prochain
+                        }
+                        //console.log(url);
+                    }
+                    else {
+                        log("Resource inexistante id: " + id, true);
                     }
                 }
-                if (numResourceSave != -1) {
-                    lstUrl.push({ id: id, url: circuit.resources[numResourceSave][0].original_url });
-                    numResourceSave = -1;//on reinitialise la varible pour le prochain
-                }
-                //console.log(url);
-            }
-            else {
-                log("Resource inexistante id: " + id, true);
-            }
+                resolve(mapUrl);
+            });
+        } catch (err) {
+            reject();
         }
-        //console.log(lstUrl);
-        //await loadReseaux(lstUrl);
-        //await loadReseauxInDB(lstUrl);
-        await consolidationTrajet();
-
     });
 }
 
-async function loadReseaux(lstUrl) {
+async function loadReseaux(mapUrl) {
     let nb = lstUrl.length;
-    for (i in lstUrl) {
-        let url = lstUrl[i].url;
-        let id = lstUrl[i].id;
+    for (const [id, urlReseau] of mapUrl) {
+        //for (i in lstUrl) {
+        let url = urlReseau.url;
         let indice = (Number(i) + 1) + "/" + nb;
         try {
             log("ZIP, " + indice + ", id: " + id + ", url: " + url, true);
-            await analyseURL(lstUrl[i]);
+            await analyseURL(urlReseau);
         } catch (err) {
             log("analyseURL: " + err);
         }
     }
 }
+
+
 
 async function analyseURL(urlObj) {
     let id = urlObj.id;
@@ -111,7 +161,8 @@ async function analyseURL(urlObj) {
                 .on('response', function (response) {
                     if (response.statusCode == 200) {//200 c'est ok
                         try {
-                            resolve(loadAndDezip(url, file, id));
+                            loadAndDezip(url, file, id);
+                            resolve();
                         } catch (er) {
                             reject(log("erreur lors du loadAndDezip, id : " + id + ", url : " + url + ", err : " + er), true);
                         }
@@ -138,96 +189,166 @@ async function loadAndDezip(url, file, id) {
                         fs.createReadStream(file)
                             .pipe(unzipStream.Extract({ path: ressource + id })
                                 .on('error', (error) => {
-                                    reject(log("DEZIP KO. id: " + id + ", error:" + error), true)
+                                    log("DEZIP KO. id: " + id + ", error:" + error), true
+                                    reject()
                                 }))
                             .on('close', function () {
-                                resolve(log("DEZIP OK. id: " + id));
+                                log("DEZIP OK. id: " + id)
+                                resolve();
                             }
                             )
                     } catch (er) {
-                        reject(log("DEZIP KO. id: " + id), true);
+                        log("DEZIP KO. id: " + id), true
+                        reject();
                     }
                 });
 
         } catch (err) {
-            reject(log("loadAndDezip KO. id: " + id), true);
+            log("loadAndDezip KO. id: " + id, true);
+            reject();
         }
     });
 
 }
 
-
-async function loadReseauxInDB(lstUrl) {
-    await modelRepo.reInitCollections();
-    const fs = require('fs');
-    for (let i in lstUrl) {
-        let rep = ressource + lstUrl[i].id;
-        await analyseRep(rep, lstUrl[i].id);
+/**
+ * Boucle sur chaque réseau de bus trouvé, 
+ *  - Analyse le répertoire dezipper en local et met en base les données.
+ *  - Consolide le trajet pour facilité le requetage par le client
+ * 
+ * @param {*} mapUrl 
+ */
+async function loadReseauxInDB(mapUrl) {
+    //await modelRepo.reInitCollections();//suppression des données existantes
+    for (const [id, urlReseau] of mapUrl) {
+        let rep = ressource + id;
+        await analyseRep(rep, urlReseau);
+        await consolidationTrajet(id);
+        await modelRepo.reInitCollectionsTemp();//suppression des table temporaire utiliser pour le calcul précedent 
     }
-    await endTime();
+    endTime();
 }
 
-async function endTime() {
+function endTime() {
     const dateFin = new Date();
     log("FINI. Temps:" + ((dateFin - dateDeb) / 1000), true);
 }
 
-async function analyseRep(rep, id) {
-    if (fs.existsSync(rep)) {
-        let files = fs.readdirSync(rep);
-        let directory = [];
-        let continu = true;
-        for (const fileName of files) {
-            const fileStat = fs.lstatSync(path.join(rep, fileName));
-            let map = modelRepo.mapFichier();
-            if (map.has(fileName)) {
-                await csvToDB(rep + "/" + fileName, id, map.get(fileName));
-                continu = false;
-            } else if (fileStat.isDirectory()) {
-                directory.push(rep + "/" + fileName);
+/**
+ * Analyse des répertoires où les zip sont stockés
+ * @param {*} rep 
+ * @param {*} id 
+ * @returns 
+ */
+async function analyseRep(rep, urlReseau) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (fs.existsSync(rep)) {
+                let mapModelRepo = modelRepo.mapFichier();
+                let fichiers = Array.from(mapModelRepo.keys());
+                for (let i = 0; i < fichiers.length; i++) {
+                    log("analyse du fichier: " + fichiers[i])
+                    let fileName = rep + "/" + fichiers[i];
+                    if (fs.existsSync(fileName)) {
+                        await analyseFichier(fileName, urlReseau, mapModelRepo.get(fichiers[i]));
+                    }
+                }
+                resolve();
+            } else {
+                resolve();
             }
+        } catch (err) {
+            reject();
         }
-        if (continu) {
-            for (let i in directory) {
-                analyseRep(directory[i], id);
-            }
+    });
+}
+
+
+
+function csvToJson(titre, contenu) {
+    try {
+        let tabTitre = titre.replace(/(\r\n|\n|\r)/gm, "").trim().split(",");
+        let tabContenu = contenu.replace(/(\r\n|\n|\r)/gm, "").replaceAll("\"", "").trim().split(",");
+        let result = "{";
+        for (i in tabTitre) {
+            result += "\"" + tabTitre[i] + "\":\"" + tabContenu[i] + "\",";
         }
+        result = result.substring(0, result.length - 1); //on enleve la derniere ","
+        result += "}";
+        return JSON.parse(result);
+    } catch (err) {
+        log("Error parsing CSV titre: " + titre + ". contenu:" + contenu)
     }
+
 }
 /**
  * Import du fichier en base de donnée. 
- * Chaque fichier est découpé en bloc de 20000 lignes pour etre inseré en base pour éviter les probleme de mémoires
+ * Chaque fichier est découpé en bloc de 20000 lignes pour etre inseré en base pour éviter les problemes de mémoires
  * @param {*} fileName 
  * @param {*} id 
  * @param {*} model 
  */
-async function csvToDB(fileName, id, model) {
-    //return new Promise((resolve, reject)=>{
-    try {
-        let premiereLigne = "";
-        let stringFichier = "";
-        let numLigne = 0
-        lineReader.eachLine(fileName, (line, last) => {
-            if (numLigne == 0) {
-                premiereLigne = (line + os.EOL);
-            } else {
-                stringFichier += (line + os.EOL);
-            }
-            numLigne++;
-            if (numLigne % 20000 == 0 | last) {
-                stringFichier = premiereLigne + "\n" + stringFichier;//on rajoute la premiere ligne
-                csvtojson().fromString(stringFichier).then((tableauJson) => {
-                    insertDb(fileName, id, model, tableauJson);
-                });
-                stringFichier = "";
-            }
+async function analyseFichier(fileName, urlReseau, model) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let premiereLigne = "";
+            const broadbandLines = new nReadlines("./" + fileName);
+            fichierJson = [];
+            let line;
+            let numLigne = 1;
+            while (line = broadbandLines.next()) {
+                if (numLigne == 1) {
+                    premiereLigne = line.toString('ascii');
+                } else {
+                    fichierJson.push(csvToJson(premiereLigne, line.toString()));
+                }
 
-        });
-    }
-    catch (er) {
-        //reject(log("DB ERROR" + model + ",id: "+id + " fileName=" + fileName + ", er:" + er, true));
-    }
-    //});
+                numLigne++;
+                if (numLigne % 20000 == 0) {
+                    await insertFichierDB(fileName, urlReseau, model, fichierJson);
+                    fichierJson = [];
+                }
+            }
+            //si il en reste un peu
+            if (fichierJson.length > 0) {
+                await insertFichierDB(fileName, urlReseau, model, fichierJson);
+            }
+            resolve();
+        }
+        catch (er) {
+            log("DB ERROR" + model + ",id: " + urlReseau.id + " fileName=" + fileName + ", er:" + er, true)
+            reject();
+        }
+    });
+}
+
+/**
+ * Transforme le fichier csc en json pour l'insérer en base
+ * @param {} fileName 
+ * @param {*} urlReseau 
+ * @param {*} stringFichier 
+ * @param {*} model 
+ */
+async function insertFichierDB(fileName, urlReseau, model, tableauJson) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let mapFileTemp = modelRepo.mapFichierTemp();
+            fileNameCourt = fileName.substring(fileName.lastIndexOf("/") + 1);
+
+            if (mapFileTemp.has(fileNameCourt)) {//enregistrement dans les tables temporaires
+                await insertDb(fileName, urlReseau.id, mapFileTemp.get(fileNameCourt), tableauJson);
+            }
+            if (urlReseau.rt) {//si on est sur un circuit temp réel
+                await insertDb(fileName, urlReseau.id, model, tableauJson);//on enregistre toute les tables
+            } else if (!mapFileTemp.has(fileNameCourt)) {//sinon on enregistre pas les trois tables volumineuse (stops, trips, stop_time) 
+                await insertDb(fileName, urlReseau.id, model, tableauJson);
+            }
+            resolve();
+        } catch (err) {
+            log("ERROR" + err);
+            reject();
+        }
+    });
 }
 
 function calculIdPosition(lat, lon) {
@@ -243,157 +364,137 @@ function calculIdPosition(lat, lon) {
 
 async function insertDb(fileName, id, model, tableauJson) {
     return new Promise((resolve, reject) => {
-        try {
-            for (let i in tableauJson) {
-                tableauJson[i]["id"] = id;
-
-                if (model == "stops") {
-                    tableauJson[i]["idPosition"] = calculIdPosition(tableauJson[i].stop_lat, tableauJson[i].stop_lon);
-                }
+        for (let i in tableauJson) {
+            tableauJson[i]["id"] = id;
+            if (model == "stops" | model == "temp_stops") {
+                tableauJson[i]["idPosition"] = calculIdPosition(tableauJson[i].stop_lat, tableauJson[i].stop_lon);
             }
+        }
 
-            //console.log(tableauJson);
-            let map = modelRepo.mapModel();
-            map.get(model).insertMany(tableauJson, (err, result) => {
+        let mapModelRepo = modelRepo.mapModel();
+        mapModelRepo.get(model).insertMany(tableauJson, async (err, result) => {
+            if (err) {
+                reject({ err: 'not found' });
+            } else {
+                log("CSV " + model + ",lignes:," + result.length + ", id: " + id + ", fileName=" + fileName, true);
+                resolve();
+            }
+        });
+    });
+}
+
+/**
+ * Conncaténation de la table routes, trip, stop, et stops_time dans la table Trajet
+ * afin de créer une nouvelle table optimisée pour le requetage.
+ */
+async function consolidationTrajet(id) {
+    return new Promise((resolve, reject) => {
+        let map = modelRepo.mapModel();
+        let RoutesCollec = map.get("routes");
+
+        let criteriaRoute;
+        //criteriaRoute = { id: "56b0c2fba3a7294d39b88a86" };
+        criteriaRoute = { "id": id };
+        log("consolidation reseaux: " + id);
+        try {
+            let center = [];
+            RoutesCollec.find(criteriaRoute, async function (err, lstRoutes) {//on récupere toutes les routes
                 if (err) {
-                    reject(log("CSV ERROR" + model + ",id: " + id + " fileName=" + fileName, true));
+                    console.log("err: " + err);
                 }
-                if (result) {
-                    resolve(log("CSV " + model + ",lignes:," + tableauJson.length + ", id: " + id + ", fileName=" + fileName, true));
+                log("nombre de routes: " + lstRoutes.length);
+                for (let numRoute in lstRoutes) {
+                    try {
+                        await analyseRoute(lstRoutes[numRoute], numRoute, center);
+                    } catch (err) {
+                    }
                 }
-            });
-        } catch (er) {
-            reject(log("CSV ERROR" + model + ",id: " + id + " fileName=" + fileName + ", er:" + er, true));
+                resolve();
+                log(center);
+            }).clone().catch(error => { throw error });
+        } catch (err) {
+            reject(log(err));
         }
     });
 }
 
-class Trajet {
-    id;
-    route_text_color;
-    route_color;
-    route_long_name;
-    route_short_name;
-    route_id;
-    idPosition = [];
-    stops = [];
-}
-
-
-class Stops {
-    //coord = [];
-    stop_name;
-    stop_id;
-    stop_lat;
-    stop_lon;
-    idPosition;
-}
-class Pos {
-    pos;
-}
-
-/**
- * Conncaténation de la table routes, trip, stop, et stops_time 
- * afin de créer une nouvelle table optimisée pour le requetage.
- */
-async function consolidationTrajet() {
-    let map = modelRepo.mapModel();
-    let RoutesCollec = map.get("routes");
-
-    let criteriaRoute;
-    criteriaRoute = { id: "56b0c2fba3a7294d39b88a86" };
-    //criteriaRoute = {};
-    try{
-        await RoutesCollec.find(criteriaRoute, async function (err, lstRoutes) {//on récupere toutes les routes
-            if (err) { console.log("err: " + err); }
-            for (let numRoute in lstRoutes) {
-                try{
-                    await analyseRoute(lstRoutes[numRoute], numRoute);
-                }catch(err){
-
-                }
-            }
-        }).clone().catch(error => { throw error});
-    }catch(err){
-        log(err);
-    }
-}
-
-async function analyseRoute(route, numRoute) {
-
+async function analyseRoute(route, numRoute, center) {
     return new Promise((resolve, reject) => {
         try {
             let map = modelRepo.mapModel();
-            let TripsCollec = map.get("trips");
-            let StopTimesCollec = map.get("stop_times");
-            let StopsCollec = map.get("stops");
+            let TripsCollec = map.get("temp_trips");
+            let StopTimesCollec = map.get("temp_stop_times");
+            let StopsCollec = map.get("temp_stops");
             //if (route.route_short_name == "15") {
 
-                let criteriaTrip = { id: route.id, route_id: route.route_id };
-                TripsCollec.find(criteriaTrip, function (err, lstTrips) {//on récupere le premier trip de chaque route
-                    let trip = lstTrips[0];
-                    //log("trip.trip_headsign : " + trip.trip_headsign);
-                    if (trip){
-                        let criteriaStopTimes = { id: route.id, trip_id: trip.trip_id };
-                        StopTimesCollec.find(criteriaStopTimes, function (err, lstStopsTime) {//on recupere tous les stops du trip
-                            log(numRoute + " : route.route_long_name : " + route.route_long_name)
-                            let mapStopsStopTime = new Map();
-                            for (let numStopTime in lstStopsTime) {//on boucle sur chaque stopTime 
-                                let stopsTime = lstStopsTime[numStopTime];
-                                mapStopsStopTime.set(stopsTime.stop_sequence, stopsTime.stop_id);//sert pour garder l'ordre des stops
+            let criteriaTrip = { id: route.id, route_id: route.route_id };
+            TripsCollec.find(criteriaTrip, function (err, lstTrips) {//on récupere le premier trip de chaque route
+                let trip = lstTrips[0];
+                //log("trip.trip_headsign : " + trip.trip_headsign);
+                if (trip) {
+                    let criteriaStopTimes = { id: route.id, trip_id: trip.trip_id };
+                    StopTimesCollec.find(criteriaStopTimes, function (err, lstStopsTime) {//on recupere tous les stops du trip
+                        log(numRoute + " : route.route_long_name : " + route.route_long_name)
+                        let mapStopsStopTime = new Map();
+                        for (let numStopTime in lstStopsTime) {//on boucle sur chaque stopTime 
+                            let stopsTime = lstStopsTime[numStopTime];
+                            mapStopsStopTime.set(stopsTime.stop_sequence, stopsTime.stop_id);//sert pour garder l'ordre des stops
+                        }
+                        //log("stopTime.stop_sequence : " + stopTime.stop_sequence);
+
+                        let criteriaStop = { id: route.id, stop_id: { $in: Array.from(mapStopsStopTime.values()) } };
+                        StopsCollec.find(criteriaStop, function (err, lstStop) {//pour enfin recuperer chaque stop
+                            let trajet = new Trajet();
+                            log("analyse" + route.route_short_name);
+                            //trajet.id = route.id;
+                            trajet.route_id = route.route_id;
+                            trajet.route_long_name = route.route_long_name;
+                            trajet.route_short_name = route.route_short_name;
+                            trajet.route_text_color = route.route_text_color;
+                            trajet.route_color = route.route_color;
+
+                            let mapStop = new Map(); //let mapStop = lstStop.map(lstStop.stop_id => lstStop);
+                            for (let numStop in lstStop) {
+                                mapStop.set(lstStop[numStop].stop_id, lstStop[numStop]);//sert pour garder l'ordre des stops
                             }
-                            //log("stopTime.stop_sequence : " + stopTime.stop_sequence);
 
-                            let criteriaStop = { id: route.id, stop_id: { $in: Array.from(mapStopsStopTime.values()) } };
-                            StopsCollec.find(criteriaStop, function (err, lstStop) {//pour enfin recuperer chaque stop
-                                let trajet = new Trajet();
-                                log("analyse" + route.route_short_name);
-                                //trajet.id = route.id;
-                                trajet.route_id = route.route_id;
-                                trajet.route_long_name = route.route_long_name;
-                                trajet.route_short_name = route.route_short_name;
-                                trajet.route_text_color = route.route_text_color;
-                                trajet.route_color = route.route_color;
-
-                                let mapStop = new Map(); //let mapStop = lstStop.map(lstStop.stop_id => lstStop);
-                                for (let numStop in lstStop) {
-                                    mapStop.set(lstStop[numStop].stop_id, lstStop[numStop]);//sert pour garder l'ordre des stops
+                            for (let numStopTime in lstStopsTime) {
+                                let stop = mapStop.get(mapStopsStopTime.get(lstStopsTime[numStopTime].stop_sequence));
+                                if (stop) {
+                                    let stops = new Stops();
+                                    //stops.id = stop.id;
+                                    log("    " + lstStopsTime[numStopTime].stop_sequence + ": " + stop.stop_name)
+                                    stops.stop_name = stop.stop_name;
+                                    stops.idPosition = calculIdPosition(stop.stop_lat, stop.stop_lon);
+                                    stops.stop_id = stop.stop_id;
+                                    stops.stop_lat = stop.stop_lat;
+                                    stops.stop_lon = stop.stop_lon;
+                                    stops.stop_sequence = mapStopsStopTime.get(stop.stop_id);
+                                    center = calculCenter(center, stop.stop_lon, stop.stop_lat)
+                                    trajet.stops.push(stops);
                                 }
+                            }
 
-                                for (let numStopTime in lstStopsTime) {
-                                    let stop = mapStop.get(mapStopsStopTime.get(lstStopsTime[numStopTime].stop_sequence));
-                                    if (stop){
-                                        let stops = new Stops();
-                                        //stops.id = stop.id;
-                                        log("    " + lstStopsTime[numStopTime].stop_sequence + ": " + stop.stop_name)
-                                        stops.stop_name = stop.stop_name;
-                                        stops.idPosition = calculIdPosition(stop.stop_lat, stop.stop_lon);
-                                        stops.stop_id = stop.stop_id;
-                                        stops.stop_lat = stop.stop_lat;
-                                        stops.stop_lon = stop.stop_lon;
-                                        stops.stop_sequence = mapStopsStopTime.get(stop.stop_id);
-                                        trajet.stops.push(stops);
-                                    }
+                            let mapIdPosition = new Map();
+                            for (numStop in trajet.stops) {
+                                let stop = trajet.stops[numStop];
+                                if (!mapIdPosition.get(stop.idPosition)) {
+                                    mapIdPosition.set(stop.idPosition, stop.idPosition);
+                                    let position = new Pos();
+                                    position.pos = stop.idPosition;
+                                    trajet.idPosition.push(position);
                                 }
-
-                                let mapIdPosition = new Map();
-                                for (numStop in trajet.stops) {
-                                    let stop = trajet.stops[numStop];
-                                    if (!mapIdPosition.get(stop.idPosition)) {
-                                        mapIdPosition.set(stop.idPosition, stop.idPosition);
-                                        let position = new Pos();
-                                        position.pos = stop.idPosition;
-                                        trajet.idPosition.push(position);
-                                    }
-                                }
-                                let lstTrajet = [];
-                                lstTrajet.push(trajet);
-                                insertDb("Consolidation du trajet", route.id, "trajets", lstTrajet);
-                                return resolve(true);
-                            }).clone().catch(error => { throw error});
-                        }).clone().sort({ stop_sequence: -1}).catch(error => { throw error});
-                    }
-                }).clone().limit(1).catch(error => { throw error});
+                            }
+                            let lstTrajet = [];
+                            lstTrajet.push(trajet);
+                            insertDb("Consolidation du trajet", route.id, "trajets", lstTrajet);
+                            return resolve(true);
+                        }).clone().catch(error => { throw error });
+                    }).clone().sort({ stop_sequence: -1 }).catch(error => { throw error });
+                } else {
+                    return resolve(true);
+                }
+            }).clone().limit(1).catch(error => { throw error });
 
             /*}
             else {
@@ -404,6 +505,20 @@ async function analyseRoute(route, numRoute) {
         }
 
     });
+}
+
+function calculCenter(center, lon, lat) {
+    if (center.length = 0) {
+        center[0] = lon;
+        center[1] = lon;
+        center[2] = lat;
+        center[3] = lat;
+    }
+    center[0] = Math.min(lon, center[0]);
+    center[1] = Math.max(lon, center[1]);
+    center[2] = Math.min(lat, center[2]);
+    center[3] = Math.max(lat, center[3]);
+    return center;
 }
 
 function filtreStops(lstStops) {

@@ -1,0 +1,954 @@
+{
+	"header": {
+		"gtfsRealtimeVersion": "2.0",
+		"incrementality": "FULL_DATASET",
+		"timestamp": "1648214869"
+	},
+	"entity": [
+		{
+			"id": "zenbus:Vehicle:16000015:LOC",
+			"vehicle": {
+				"trip": {
+					"tripId": "709720001:15",
+					"startDate": "20220325",
+					"scheduleRelationship": "SCHEDULED"
+				},
+				"position": {
+					"latitude": 43.648048400878909,
+					"longitude": 0.5932009816169739
+				},
+				"currentStopSequence": 17,
+				"currentStatus": "IN_TRANSIT_TO",
+				"timestamp": "1648214868",
+				"vehicle": {
+					"id": "zenbus:Vehicle:16000015:LOC"
+				}
+			}
+		},
+		{
+			"id": "20220325:657400005:15",
+			"tripUpdate": {
+				"trip": {
+					"tripId": "709720001:15",
+					"startDate": "20220325",
+					"scheduleRelationship": "SCHEDULED"
+				},
+				"stopTimeUpdate": [
+					{
+						"stopSequence": 17,
+						"arrival": {
+							"time": "1648214926"
+						},
+						"departure": {
+							"time": "1648214936"
+						},
+						"stopId": "zenbus:StopPoint:SP:638770002:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 18,
+						"arrival": {
+							"time": "1648215028"
+						},
+						"departure": {
+							"time": "1648215038"
+						},
+						"stopId": "zenbus:StopPoint:SP:2820018:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 19,
+						"arrival": {
+							"time": "1648215064"
+						},
+						"departure": {
+							"time": "1648215074"
+						},
+						"stopId": "zenbus:StopPoint:SP:36700017:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					}
+				],
+				"vehicle": {
+					"id": "zenbus:Vehicle:16000015:LOC"
+				},
+				"timestamp": "1648214868"
+			}
+		},
+		{
+			"id": "zenbus:Vehicle:586790001:LOC",
+			"vehicle": {
+				"trip": {
+					"tripId": "709720001:17",
+					"startDate": "20220325",
+					"scheduleRelationship": "SCHEDULED"
+				},
+				"position": {
+					"latitude": 43.63743209838867,
+					"longitude": 0.5960320234298706
+				},
+				"currentStopSequence": 9,
+				"currentStatus": "IN_TRANSIT_TO",
+				"timestamp": "1648214867",
+				"vehicle": {
+					"id": "zenbus:Vehicle:586790001:LOC"
+				}
+			}
+		},
+		{
+			"id": "20220325:657400005:17",
+			"tripUpdate": {
+				"trip": {
+					"tripId": "709720001:17",
+					"startDate": "20220325",
+					"scheduleRelationship": "SCHEDULED"
+				},
+				"stopTimeUpdate": [
+					{
+						"stopSequence": 9,
+						"arrival": {
+							"time": "1648214916"
+						},
+						"departure": {
+							"time": "1648214926"
+						},
+						"stopId": "zenbus:StopPoint:SP:18900017:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 10,
+						"arrival": {
+							"time": "1648214991"
+						},
+						"departure": {
+							"time": "1648215001"
+						},
+						"stopId": "zenbus:StopPoint:SP:653110003:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 11,
+						"arrival": {
+							"time": "1648215056"
+						},
+						"departure": {
+							"time": "1648215066"
+						},
+						"stopId": "zenbus:StopPoint:SP:860020:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 12,
+						"arrival": {
+							"time": "1648215120"
+						},
+						"departure": {
+							"time": "1648215130"
+						},
+						"stopId": "zenbus:StopPoint:SP:657410003:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 13,
+						"arrival": {
+							"time": "1648215193"
+						},
+						"departure": {
+							"time": "1648215203"
+						},
+						"stopId": "zenbus:StopPoint:SP:645540002:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 14,
+						"arrival": {
+							"time": "1648215260"
+						},
+						"departure": {
+							"time": "1648215270"
+						},
+						"stopId": "zenbus:StopPoint:SP:657420005:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 15,
+						"arrival": {
+							"time": "1648215311"
+						},
+						"departure": {
+							"time": "1648215321"
+						},
+						"stopId": "zenbus:StopPoint:SP:665050003:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 16,
+						"arrival": {
+							"time": "1648215393"
+						},
+						"departure": {
+							"time": "1648215403"
+						},
+						"stopId": "zenbus:StopPoint:SP:900017:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 17,
+						"arrival": {
+							"time": "1648215456"
+						},
+						"departure": {
+							"time": "1648215466"
+						},
+						"stopId": "zenbus:StopPoint:SP:638770002:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 18,
+						"arrival": {
+							"time": "1648215558"
+						},
+						"departure": {
+							"time": "1648215568"
+						},
+						"stopId": "zenbus:StopPoint:SP:2820018:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 19,
+						"arrival": {
+							"time": "1648215594"
+						},
+						"departure": {
+							"time": "1648215604"
+						},
+						"stopId": "zenbus:StopPoint:SP:36700017:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					}
+				],
+				"vehicle": {
+					"id": "zenbus:Vehicle:586790001:LOC"
+				},
+				"timestamp": "1648214867"
+			}
+		},
+		{
+			"id": "zenbus:Vehicle:352690001:LOC",
+			"vehicle": {
+				"trip": {
+					"tripId": "708120002:17",
+					"startDate": "20220325",
+					"scheduleRelationship": "SCHEDULED"
+				},
+				"position": {
+					"latitude": 43.64936447143555,
+					"longitude": 0.5969439744949341
+				},
+				"currentStopSequence": 8,
+				"currentStatus": "STOPPED_AT",
+				"timestamp": "1648214867",
+				"vehicle": {
+					"id": "zenbus:Vehicle:352690001:LOC"
+				}
+			}
+		},
+		{
+			"id": "20220325:662970004:17",
+			"tripUpdate": {
+				"trip": {
+					"tripId": "708120002:17",
+					"startDate": "20220325",
+					"scheduleRelationship": "SCHEDULED"
+				},
+				"stopTimeUpdate": [
+					{
+						"stopSequence": 8,
+						"arrival": {
+							"time": "1648214845"
+						},
+						"departure": {
+							"time": "1648214877"
+						},
+						"stopId": "zenbus:StopPoint:SP:640070019:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 9,
+						"arrival": {
+							"time": "1648214928"
+						},
+						"departure": {
+							"time": "1648214938"
+						},
+						"stopId": "zenbus:StopPoint:SP:634420005:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 10,
+						"arrival": {
+							"time": "1648214991"
+						},
+						"departure": {
+							"time": "1648215001"
+						},
+						"stopId": "zenbus:StopPoint:SP:638760004:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 11,
+						"arrival": {
+							"time": "1648215051"
+						},
+						"departure": {
+							"time": "1648215061"
+						},
+						"stopId": "zenbus:StopPoint:SP:880018:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 12,
+						"arrival": {
+							"time": "1648215112"
+						},
+						"departure": {
+							"time": "1648215122"
+						},
+						"stopId": "zenbus:StopPoint:SP:32860019:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 13,
+						"arrival": {
+							"time": "1648215157"
+						},
+						"departure": {
+							"time": "1648215167"
+						},
+						"stopId": "zenbus:StopPoint:SP:630320003:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 14,
+						"arrival": {
+							"time": "1648215197"
+						},
+						"departure": {
+							"time": "1648215207"
+						},
+						"stopId": "zenbus:StopPoint:SP:9000020:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 15,
+						"arrival": {
+							"time": "1648215251"
+						},
+						"departure": {
+							"time": "1648215261"
+						},
+						"stopId": "zenbus:StopPoint:SP:655090006:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 16,
+						"arrival": {
+							"time": "1648215286"
+						},
+						"departure": {
+							"time": "1648215296"
+						},
+						"stopId": "zenbus:StopPoint:SP:647810023:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 17,
+						"arrival": {
+							"time": "1648215374"
+						},
+						"departure": {
+							"time": "1648215384"
+						},
+						"stopId": "zenbus:StopPoint:SP:666970003:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 18,
+						"arrival": {
+							"time": "1648215414"
+						},
+						"departure": {
+							"time": "1648215424"
+						},
+						"stopId": "zenbus:StopPoint:SP:649600004:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 19,
+						"arrival": {
+							"time": "1648215461"
+						},
+						"departure": {
+							"time": "1648215471"
+						},
+						"stopId": "zenbus:StopPoint:SP:34900019:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 20,
+						"arrival": {
+							"time": "1648215511"
+						},
+						"departure": {
+							"time": "1648215521"
+						},
+						"stopId": "zenbus:StopPoint:SP:32850022:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 21,
+						"arrival": {
+							"time": "1648215615"
+						},
+						"departure": {
+							"time": "1648215625"
+						},
+						"stopId": "zenbus:StopPoint:SP:20860021:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 22,
+						"arrival": {
+							"time": "1648215697"
+						},
+						"departure": {
+							"time": "1648215707"
+						},
+						"stopId": "zenbus:StopPoint:SP:630330002:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					}
+				],
+				"vehicle": {
+					"id": "zenbus:Vehicle:352690001:LOC"
+				},
+				"timestamp": "1648214867"
+			}
+		},
+		{
+			"id": "zenbus:Vehicle:28000087:LOC",
+			"vehicle": {
+				"trip": {
+					"tripId": "702480001:9",
+					"startDate": "20220325",
+					"scheduleRelationship": "SCHEDULED"
+				},
+				"position": {
+					"latitude": 43.66374588012695,
+					"longitude": 0.5906140208244324
+				},
+				"currentStopSequence": 24,
+				"currentStatus": "IN_TRANSIT_TO",
+				"timestamp": "1648214868",
+				"vehicle": {
+					"id": "zenbus:Vehicle:28000087:LOC"
+				}
+			}
+		},
+		{
+			"id": "20220325:630310004:9",
+			"tripUpdate": {
+				"trip": {
+					"tripId": "702480001:9",
+					"startDate": "20220325",
+					"scheduleRelationship": "SCHEDULED"
+				},
+				"stopTimeUpdate": [
+					{
+						"stopSequence": 24,
+						"arrival": {
+							"time": "1648214880"
+						},
+						"departure": {
+							"time": "1648214890"
+						},
+						"stopId": "zenbus:StopPoint:SP:18900019:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 25,
+						"arrival": {
+							"time": "1648214952"
+						},
+						"departure": {
+							"time": "1648214962"
+						},
+						"stopId": "zenbus:StopPoint:SP:32860021:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 29,
+						"arrival": {
+							"time": "1648215006"
+						},
+						"departure": {
+							"time": "1648215016"
+						},
+						"stopId": "zenbus:StopPoint:SP:659100002:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 30,
+						"arrival": {
+							"time": "1648215070"
+						},
+						"departure": {
+							"time": "1648215080"
+						},
+						"stopId": "zenbus:StopPoint:SP:670810004:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 31,
+						"arrival": {
+							"time": "1648215123"
+						},
+						"departure": {
+							"time": "1648215133"
+						},
+						"stopId": "zenbus:StopPoint:SP:14790019:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 32,
+						"arrival": {
+							"time": "1648215176"
+						},
+						"departure": {
+							"time": "1648215186"
+						},
+						"stopId": "zenbus:StopPoint:SP:9010020:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 33,
+						"arrival": {
+							"time": "1648215224"
+						},
+						"departure": {
+							"time": "1648215234"
+						},
+						"stopId": "zenbus:StopPoint:SP:588350001:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 34,
+						"arrival": {
+							"time": "1648215254"
+						},
+						"departure": {
+							"time": "1648215264"
+						},
+						"stopId": "zenbus:StopPoint:SP:36700017:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					}
+				],
+				"vehicle": {
+					"id": "zenbus:Vehicle:28000087:LOC"
+				},
+				"timestamp": "1648214868"
+			}
+		},
+		{
+			"id": "zenbus:Vehicle:18010018:LOC",
+			"vehicle": {
+				"trip": {
+					"tripId": "715320002:9",
+					"startDate": "20220325",
+					"scheduleRelationship": "SCHEDULED"
+				},
+				"position": {
+					"latitude": 43.63761901855469,
+					"longitude": 0.5842840075492859
+				},
+				"currentStopSequence": 14,
+				"currentStatus": "STOPPED_AT",
+				"timestamp": "1648214868",
+				"vehicle": {
+					"id": "zenbus:Vehicle:18010018:LOC"
+				}
+			}
+		},
+		{
+			"id": "20220325:643860005:9",
+			"tripUpdate": {
+				"trip": {
+					"tripId": "715320002:9",
+					"startDate": "20220325",
+					"scheduleRelationship": "SCHEDULED"
+				},
+				"stopTimeUpdate": [
+					{
+						"stopSequence": 14,
+						"arrival": {
+							"time": "1648214865"
+						},
+						"departure": {
+							"time": "1648214878"
+						},
+						"stopId": "zenbus:StopPoint:SP:640050005:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 15,
+						"arrival": {
+							"time": "1648214939"
+						},
+						"departure": {
+							"time": "1648214949"
+						},
+						"stopId": "zenbus:StopPoint:SP:22750021:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 16,
+						"arrival": {
+							"time": "1648214983"
+						},
+						"departure": {
+							"time": "1648214993"
+						},
+						"stopId": "zenbus:StopPoint:SP:10830022:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 17,
+						"arrival": {
+							"time": "1648215027"
+						},
+						"departure": {
+							"time": "1648215037"
+						},
+						"stopId": "zenbus:StopPoint:SP:4960018:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 18,
+						"arrival": {
+							"time": "1648215086"
+						},
+						"departure": {
+							"time": "1648215096"
+						},
+						"stopId": "zenbus:StopPoint:SP:638780003:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 19,
+						"arrival": {
+							"time": "1648215127"
+						},
+						"departure": {
+							"time": "1648215137"
+						},
+						"stopId": "zenbus:StopPoint:SP:24870022:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 20,
+						"arrival": {
+							"time": "1648215173"
+						},
+						"departure": {
+							"time": "1648215183"
+						},
+						"stopId": "zenbus:StopPoint:SP:661120003:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 21,
+						"arrival": {
+							"time": "1648215252"
+						},
+						"departure": {
+							"time": "1648215262"
+						},
+						"stopId": "zenbus:StopPoint:SP:2800022:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					}
+				],
+				"vehicle": {
+					"id": "zenbus:Vehicle:18010018:LOC"
+				},
+				"timestamp": "1648214868"
+			}
+		},
+		{
+			"id": "zenbus:Vehicle:707890001:LOC",
+			"vehicle": {
+				"trip": {
+					"tripId": "702430026:10",
+					"startDate": "20220325",
+					"scheduleRelationship": "SCHEDULED"
+				},
+				"position": {
+					"latitude": 43.659576416015628,
+					"longitude": 0.6182309985160828
+				},
+				"currentStopSequence": 4,
+				"currentStatus": "IN_TRANSIT_TO",
+				"timestamp": "1648214827",
+				"vehicle": {
+					"id": "zenbus:Vehicle:707890001:LOC"
+				}
+			}
+		},
+		{
+			"id": "20220325:666970004:10",
+			"tripUpdate": {
+				"trip": {
+					"tripId": "702430026:10",
+					"startDate": "20220325",
+					"scheduleRelationship": "SCHEDULED"
+				},
+				"stopTimeUpdate": [
+					{
+						"stopSequence": 4,
+						"arrival": {
+							"time": "1648214855"
+						},
+						"departure": {
+							"time": "1648214865"
+						},
+						"stopId": "zenbus:StopPoint:SP:643850004:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 5,
+						"arrival": {
+							"time": "1648214899"
+						},
+						"departure": {
+							"time": "1648214909"
+						},
+						"stopId": "zenbus:StopPoint:SP:32870019:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 6,
+						"arrival": {
+							"time": "1648214939"
+						},
+						"departure": {
+							"time": "1648214949"
+						},
+						"stopId": "zenbus:StopPoint:SP:2820020:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 7,
+						"arrival": {
+							"time": "1648215049"
+						},
+						"departure": {
+							"time": "1648215059"
+						},
+						"stopId": "zenbus:StopPoint:SP:36700019:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 12,
+						"arrival": {
+							"time": "1648215192"
+						},
+						"departure": {
+							"time": "1648215202"
+						},
+						"stopId": "zenbus:StopPoint:SP:890020:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 13,
+						"arrival": {
+							"time": "1648215290"
+						},
+						"departure": {
+							"time": "1648215300"
+						},
+						"stopId": "zenbus:StopPoint:SP:657420005:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 14,
+						"arrival": {
+							"time": "1648215333"
+						},
+						"departure": {
+							"time": "1648215343"
+						},
+						"stopId": "zenbus:StopPoint:SP:665050003:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 15,
+						"arrival": {
+							"time": "1648215394"
+						},
+						"departure": {
+							"time": "1648215404"
+						},
+						"stopId": "zenbus:StopPoint:SP:17050019:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 16,
+						"arrival": {
+							"time": "1648215452"
+						},
+						"departure": {
+							"time": "1648215462"
+						},
+						"stopId": "zenbus:StopPoint:SP:638770002:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 17,
+						"arrival": {
+							"time": "1648215533"
+						},
+						"departure": {
+							"time": "1648215543"
+						},
+						"stopId": "zenbus:StopPoint:SP:2820018:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 23,
+						"arrival": {
+							"time": "1648215565"
+						},
+						"departure": {
+							"time": "1648215575"
+						},
+						"stopId": "zenbus:StopPoint:SP:36700017:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					}
+				],
+				"vehicle": {
+					"id": "zenbus:Vehicle:707890001:LOC"
+				},
+				"timestamp": "1648214827"
+			}
+		},
+		{
+			"id": "zenbus:Vehicle:539040001:LOC",
+			"vehicle": {
+				"trip": {
+					"tripId": "608790020:21",
+					"startDate": "20220325",
+					"scheduleRelationship": "SCHEDULED"
+				},
+				"position": {
+					"latitude": 43.647216796875,
+					"longitude": 0.5962039828300476
+				},
+				"currentStopSequence": 6,
+				"currentStatus": "IN_TRANSIT_TO",
+				"timestamp": "1648214867",
+				"vehicle": {
+					"id": "zenbus:Vehicle:539040001:LOC"
+				}
+			}
+		},
+		{
+			"id": "20220325:666980006:21",
+			"tripUpdate": {
+				"trip": {
+					"tripId": "608790020:21",
+					"startDate": "20220325",
+					"scheduleRelationship": "SCHEDULED"
+				},
+				"stopTimeUpdate": [
+					{
+						"stopSequence": 5,
+						"arrival": {
+							"time": "1648214833"
+						},
+						"departure": {
+							"time": "1648214846"
+						},
+						"stopId": "zenbus:StopPoint:SP:665050003:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 6,
+						"arrival": {
+							"time": "1648214920"
+						},
+						"departure": {
+							"time": "1648214965"
+						},
+						"stopId": "zenbus:StopPoint:SP:647830014:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 7,
+						"arrival": {
+							"time": "1648215033"
+						},
+						"departure": {
+							"time": "1648215043"
+						},
+						"stopId": "zenbus:StopPoint:SP:12770022:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 8,
+						"arrival": {
+							"time": "1648215128"
+						},
+						"departure": {
+							"time": "1648215138"
+						},
+						"stopId": "zenbus:StopPoint:SP:638250005:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 9,
+						"arrival": {
+							"time": "1648215195"
+						},
+						"departure": {
+							"time": "1648215205"
+						},
+						"stopId": "zenbus:StopPoint:SP:638770002:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 10,
+						"arrival": {
+							"time": "1648215307"
+						},
+						"departure": {
+							"time": "1648215317"
+						},
+						"stopId": "zenbus:StopPoint:SP:649160001:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					},
+					{
+						"stopSequence": 11,
+						"arrival": {
+							"time": "1648215362"
+						},
+						"departure": {
+							"time": "1648215372"
+						},
+						"stopId": "zenbus:StopPoint:SP:643870002:LOC",
+						"scheduleRelationship": "SCHEDULED"
+					}
+				],
+				"vehicle": {
+					"id": "zenbus:Vehicle:539040001:LOC"
+				},
+				"timestamp": "1648214867"
+			}
+		}
+	]
+}

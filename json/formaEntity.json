@@ -1,0 +1,171 @@
+{
+	"realtime": {
+		"_id": {
+			"primaryKey": true,
+			"type": "Object",
+			"required": true
+		},
+		"id": {
+			"type": "string",
+			"required": true
+		},
+		"vehicle": {
+			"type": "Object",
+			"structure": {
+				"trip": {
+					"type": "Object",
+					"structure": {
+						"tripId": {
+							"key": true,
+							"type": "string",
+							"required": true
+						},
+						"startDate": {
+							"type": "string",
+							"required": true
+						},
+						"scheduleRelationship": {
+							"type": "string",
+							"required": true
+						}
+					},
+					"required": true
+				},
+				"position": {
+					"type": "Object",
+					"structure": {
+						"latitude": {
+							"type": "number",
+							"required": true
+						},
+						"longitude": {
+							"type": "number",
+							"required": true
+						}
+					},
+					"required": true
+				},
+				"currentStopSequence": {
+					"type": "number",
+					"required": true
+				},
+				"currentStatus": {
+					"type": "string",
+					"required": true
+				},
+				"timestamp": {
+					"type": "string",
+					"required": true
+				},
+				"vehicle": {
+					"type": "Object",
+					"structure": {
+						"id": {
+							"type": "string",
+							"required": true
+						}
+					},
+					"required": true
+				}
+			},
+			"required": true
+		},
+		"tripUpdate": {
+			"type": "Object",
+			"structure": {
+				"trip": {
+					"type": "Object",
+					"structure": {
+						"tripId": {
+							"key": true,
+							"type": "string",
+							"required": true
+						},
+						"startDate": {
+							"type": "string",
+							"required": true
+						},
+						"scheduleRelationship": {
+							"type": "string",
+							"required": true
+						}
+					},
+					"required": true
+				},
+				"stopTimeUpdate": {
+					"type": "Array",
+					"required": true
+				},
+				"vehicle": {
+					"type": "Object",
+					"structure": {
+						"id": {
+							"type": "string",
+							"required": true
+						}
+					},
+					"required": true
+				},
+				"timestamp": {
+					"type": "string",
+					"required": true
+				}
+			},
+			"required": true
+		},
+		"alert": {
+			"type": "Object",
+			"structure": {
+				"activePeriod": {
+					"type": "Array",
+					"required": true
+				},
+				"informedEntity": {
+					"type": "Array",
+					"required": true
+				},
+				"cause": {
+					"key": true,
+					"type": "string",
+					"required": true
+				},
+				"effect": {
+					"key": true,
+					"type": "string",
+					"required": true
+				},
+				"url": {
+					"type": "Object",
+					"structure": {
+						"translation": {
+							"type": "Array",
+							"required": true
+						}
+					},
+					"required": true
+				},
+				"headerText": {
+					"type": "Object",
+					"structure": {
+						"translation": {
+							"type": "Array",
+							"required": true
+						}
+					},
+					"required": true
+				},
+				"descriptionText": {
+					"type": "Object",
+					"structure": {
+						"translation": {
+							"type": "Array",
+							"required": true
+						}
+					},
+					"required": true
+				}
+			},
+			"required": true
+		}
+	}
+}
