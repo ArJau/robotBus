@@ -487,7 +487,10 @@ async function initModels(){
         service_id : {"type": "string"},
         trip_id : {"type": "string"},
         trip_headsign : {"type": "string"},
-        block_id : {"type": "string"}
+        block_id : {"type": "string"},
+        shape_id : {"type": "string"},
+        wheelchair_accessible : {"type": "string"},
+        bikes_allowed : {"type": "string"}
     };
     repoInit(db, 'temp_trips', temp_trips);
         
@@ -575,6 +578,16 @@ async function initModels(){
     };
     repoInit(db, 'shapes', shapes);
 
+    let temp_shapes = {
+        id : {"type": "string"},
+        shape_id: {"type": "string"},
+        shape_pt_lat : {"type": "number"},
+        shape_pt_lon : {"type": "number"},
+        shape_pt_sequence : {"type": "string"},
+        shape_dist_traveled : {"type": "string"}
+    };
+    repoInit(db, 'temp_shapes', temp_shapes);
+
     let pathways = {
         pathway_id : {"type": "string"},
         from_stop_id: {"type": "string"},
@@ -650,7 +663,8 @@ async function initModels(){
         route_long_name : {"type": "string"},
         route_short_name : {"type": "string"},
         idPosition : [],
-        stops : []
+        stops : [],
+        shapes : []
     };
     repoInit(db, 'trajets', trajets);
 
@@ -666,10 +680,10 @@ function repoInit(db, nameCollection, schema){
  * Mapping entre le nom du fichier de description et de la collection.
  */
 function initMapF(){
-    mapF.set('agency.txt', 'agencies');
+    //mapF.set('agency.txt', 'agencies');
+    mapF.set('routes.txt', 'routes');
 
     /*mapF.set('stops.txt', 'stops');
-    mapF.set('routes.txt', 'routes');
     mapF.set('trips.txt', 'trips');
     mapF.set('stop_times.txt', 'stop_times');
     mapF.set('calendar.txt', 'calendars');
@@ -677,7 +691,7 @@ function initMapF(){
     mapF.set('fare_attributes.txt', 'fare_attributes');
     mapF.set('fare_rules.txt', 'fare_rules');
 
-    mapF.set('shapes.txt', 'shapes');*/
+    mapF.set('shapes.txt', 'shapes');
 
     /*mapF.set('pathways.txt', 'pathways');
     mapF.set('frequencies.txt', 'frequencies');
@@ -696,6 +710,8 @@ function initMapTempF(){
     mapTempF.set('stops.txt', 'temp_stops');
     mapTempF.set('trips.txt', 'temp_trips');
     mapTempF.set('stop_times.txt', 'temp_stop_times');
+    mapTempF.set('shapes.txt', 'temp_shapes');
+    
 }
 
 function mapFichierTemp(){
