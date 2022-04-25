@@ -668,6 +668,17 @@ async function initModels(){
     };
     repoInit(db, 'trajets', trajets);
 
+
+    let descReseau = {
+        title: {"type": "string"},
+        id: {"type": "string"},
+        url: {"type": "string"},
+        rt: {"type": "string"},
+        nbRoutes: {"type": "string"},
+        center: []
+    };
+    repoInit(db, 'reseau-descs', descReseau);
+ 
 }
 
 function repoInit(db, nameCollection, schema){
@@ -680,18 +691,19 @@ function repoInit(db, nameCollection, schema){
  * Mapping entre le nom du fichier de description et de la collection.
  */
 function initMapF(){
-    //mapF.set('agency.txt', 'agencies');
-    mapF.set('routes.txt', 'routes');
+    mapF.set('agency.txt', 'agencies');
 
-    /*mapF.set('stops.txt', 'stops');
+    mapF.set('routes.txt', 'routes');
+    mapF.set('stops.txt', 'stops');
     mapF.set('trips.txt', 'trips');
     mapF.set('stop_times.txt', 'stop_times');
+    mapF.set('shapes.txt', 'shapes');
+
     mapF.set('calendar.txt', 'calendars');
     mapF.set('calendar_dates.txt', 'calendar_dates');
     mapF.set('fare_attributes.txt', 'fare_attributes');
     mapF.set('fare_rules.txt', 'fare_rules');
 
-    mapF.set('shapes.txt', 'shapes');
 
     /*mapF.set('pathways.txt', 'pathways');
     mapF.set('frequencies.txt', 'frequencies');
@@ -729,12 +741,13 @@ async function reInitCollections(){
     let mapM = mapModel();
     let criteria = {};
     //criteria = {"id": "55ffbe0888ee387348ccb97d"};
-    //criteria = {};
+    criteria = { "id": "61fd32feaa59c5ebde258f2d" };
     for (const collectionName of mapF.values()){
         await deleteModel(mapM.get(collectionName), collectionName,criteria);
     }
 
     await deleteModel(mapM.get("trajets"), "trajets",criteria);
+    await deleteModel(mapM.get("reseau-descs"), "reseau-descs",criteria);
 }
 
 /**

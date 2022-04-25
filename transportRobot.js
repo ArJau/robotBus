@@ -11,12 +11,16 @@ var modelRepo = require('./model');
 var ressource = "ressources/";
 var PersistentCircuitModel;
 var dateDeb = new Date();
+const csvtojson = require('csvtojson');
 
 //a exporter dans un autre fichier
 class UrlReseau {
+    title;
     id;
     url;
     rt;
+    nbRoutes;
+    center;
 }
 class Trajet {
     id;
@@ -64,15 +68,28 @@ async function recupereUrl() {
             var criteria;
             criteria = { "resources.metadata.modes": "bus" };
             criteria = { "id": "55ffbe0888ee387348ccb97d" };//brest
+            //criteria = { "id": "61fd32feaa59c5ebde258f2d" };//Quimper Bretagne Occidentale
+            
             //criteria = {};
             //a faire 620c150a0171135d9b35ecc6
             //a faire 6036e9df9d7c9b462c7ce5a4
             //criteria = { "id": "56b0c2fba3a7294d39b88a86" };//toulouse
 
+            /*criteria = { "id": {$in: ["55ffbe0888ee387348ccb97d"
+            , "56b0c2fba3a7294d39b88a86"
+            , "5c34c93f8b4c4104b817fb3a"
+            , "5f11962cc694e04ea707f124"
+            , "5de42c4d8b4c417a10e62ec9"
+            , "5cedcdd106e3e72f1eb31ef9"
+            , "5cedcdcd06e3e72f1eb31ef4"
+            
+            ] } }*/
+
             PersistentCircuitModel.find(criteria, async function (err, lstCircuits) {
                 if (err) {
                     console.log("err: " + err);
                 }
+                //lstCircuits = lstCircuits.slice(10);
                 for (i in lstCircuits) {
                     let circuit = lstCircuits[i];
                     if (circuit.resources) {
@@ -116,6 +133,7 @@ async function recupereUrl() {
                             }
                             let urlReseau = mapUrl.get(id)
                             urlReseau.id = id;
+                            urlReseau.title = circuit.title  + (circuit.aom?(" <br> " + circuit.aom.name):"");
                             urlReseau.url = circuit.resources[numResourceSave][0].original_url;
 
                             numResourceSave = -1;//on reinitialise la varible pour le prochain
@@ -221,12 +239,16 @@ async function loadAndDezip(url, file, id) {
  */
 async function loadReseauxInDB(mapUrl) {
     await modelRepo.reInitCollections();//suppression des données existantes
+    let i=0;
     for (const [id, urlReseau] of mapUrl) {
         let rep = ressource + id;
+        i++;
+        log(i + " ********************************** Circuit: " + urlReseau.title);
         await analyseRep(rep, urlReseau);
-        await consolidationTrajet(id);
-        //await modelRepo.reInitCollectionsTemp();//suppression des table temporaire utiliser pour le calcul précedent 
+        await consolidationTrajet(id, mapUrl);
+        await modelRepo.reInitCollectionsTemp();//suppression des table temporaires utiliser pour le calcul précedent 
     }
+    await insertDbBasic('reseau-descs', Array.from(mapUrl.values()));
     endTime();
 }
 
@@ -247,7 +269,7 @@ async function analyseRep(rep, urlReseau) {
             if (fs.existsSync(rep)) {
                 let mapModelRepo = modelRepo.mapFichier();
                 let fichiers = Array.from(mapModelRepo.keys());
-                for (let i = 0; i < fichiers.length; i++) {
+                for (let i in fichiers) {
                     log("analyse du fichier: " + fichiers[i])
                     let fileName = rep + "/" + fichiers[i];
                     if (fs.existsSync(fileName)) {
@@ -268,11 +290,11 @@ async function analyseRep(rep, urlReseau) {
 
 function csvToJson(titre, contenu) {
     try {
-        let tabTitre = titre.replace(/(\r\n|\n|\r)/gm, "").trim().split(",");
-        let tabContenu = contenu.replace(/(\r\n|\n|\r)/gm, "").replaceAll("\"", "").trim().split(",");
+        let tabTitre = titre.replace("o;?", "").replace(/(\r\n|\n|\r)/gm, "").trim().split(",");
+        let tabContenu = contenu.replaceAll("o;?", "").replace(/(\r\n|\n|\r)/gm, "").trim().split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
         let result = "{";
         for (i in tabTitre) {
-            result += "\"" + tabTitre[i] + "\":\"" + tabContenu[i] + "\",";
+            result += "\"" + tabTitre[i] + "\":\"" + tabContenu[i].replaceAll("\"", "") + "\",";
         }
         result = result.substring(0, result.length - 1); //on enleve la derniere ","
         result += "}";
@@ -346,7 +368,7 @@ async function insertFichierDB(fileName, urlReseau, model, tableauJson) {
             }
             resolve();
         } catch (err) {
-            log("ERROR" + err);
+            log("ERROR : " + err.err);
             reject();
         }
     });
@@ -375,7 +397,7 @@ async function insertDb(fileName, id, model, tableauJson) {
         let mapModelRepo = modelRepo.mapModel();
         mapModelRepo.get(model).insertMany(tableauJson, async (err, result) => {
             if (err) {
-                reject({ err: 'not found' });
+                reject({ err: err });
             } else {
                 log("CSV " + model + ",lignes:," + result.length + ", id: " + id + ", fileName=" + fileName, true);
                 resolve();
@@ -384,11 +406,27 @@ async function insertDb(fileName, id, model, tableauJson) {
     });
 }
 
+async function insertDbBasic(model, tableauJson) {
+    return new Promise((resolve, reject) => {
+        let mapModelRepo = modelRepo.mapModel();
+        mapModelRepo.get(model).insertMany(tableauJson, async (err, result) => {
+            if (err) {
+                reject({ err: err });
+            } else {
+                log("Model " + model + ",lignes:," + result.length, true);
+                resolve();
+            }
+        });
+    });
+}
+
+
+
 /**
  * Conncaténation de la table routes, trip, stop, et stops_time dans la table Trajet
  * afin de créer une nouvelle table optimisée pour le requetage.
  */
-async function consolidationTrajet(id) {
+async function consolidationTrajet(id, mapUrl) {
     return new Promise((resolve, reject) => {
         let map = modelRepo.mapModel();
         let RoutesCollec = map.get("routes");
@@ -410,8 +448,12 @@ async function consolidationTrajet(id) {
                     } catch (err) {
                     }
                 }
+                let centerC = [];
+                centerC.push((center[0] + center[2])/2);
+                centerC.push((center[1] + center[3])/2);
+                mapUrl.get(id).center = centerC;
+                mapUrl.get(id).nbRoutes = lstRoutes.length;
                 resolve();
-                log(center);
             }).clone().catch(error => { throw error });
         } catch (err) {
             reject(log(err));
@@ -436,7 +478,7 @@ async function analyseRoute(route, numRoute, center) {
                 if (trip) {
                     let criteriaStopTimes = { id: route.id, trip_id: trip.trip_id };
                     StopTimesCollec.find(criteriaStopTimes, async function (err, lstStopsTime) {//on recupere tous les stops du trip
-                        log(numRoute + " : route.route_long_name : " + route.route_long_name)
+                        //log(numRoute + " : route.route_long_name : " + route.route_long_name)
                         let mapStopsStopTime = new Map();
                         for (let numStopTime in lstStopsTime) {//on boucle sur chaque stopTime 
                             let stopsTime = lstStopsTime[numStopTime];
@@ -447,7 +489,6 @@ async function analyseRoute(route, numRoute, center) {
                         let criteriaStop = { id: route.id, stop_id: { $in: Array.from(mapStopsStopTime.values()) } };
                         StopsCollec.find(criteriaStop, async function (err, lstStop) {//pour enfin recuperer chaque stop
                             let trajet = new Trajet();
-                            log("analyse: " + route.route_short_name);
                             //trajet.id = route.id;
                             trajet.route_id = route.route_id;
                             trajet.route_long_name = route.route_long_name;
@@ -472,7 +513,7 @@ async function analyseRoute(route, numRoute, center) {
                                     stops.stop_lat = stop.stop_lat;
                                     stops.stop_lon = stop.stop_lon;
                                     stops.stop_sequence = mapStopsStopTime.get(stop.stop_id);
-                                    center = calculCenter(center, stop.stop_lon, stop.stop_lat)
+                                    center = calculCenter(center, stop.stop_lat, stop.stop_lon);
                                     trajet.stops.push(stops);
                                 }
                             }
@@ -498,7 +539,7 @@ async function analyseRoute(route, numRoute, center) {
 
                             let lstTrajet = [];
                             lstTrajet.push(trajet);
-                            insertDb("Consolidation du trajet", route.id, "trajets", lstTrajet);
+                            insertDb(numRoute + " : long_name : " + route.route_long_name, route.id, "trajets", lstTrajet);
                             return resolve(true);
                         }).clone().catch(error => { throw error });
                     }).clone().sort({ stop_sequence: -1 }).catch(error => { throw error });
@@ -518,17 +559,17 @@ async function analyseRoute(route, numRoute, center) {
     });
 }
 
-function calculCenter(center, lon, lat) {
-    if (center.length = 0) {
-        center[0] = lon;
+function calculCenter(center, lat, lon) {
+    if (center.length == 0) {
+        center[0] = lat;
         center[1] = lon;
         center[2] = lat;
-        center[3] = lat;
+        center[3] = lon;
     }
-    center[0] = Math.min(lon, center[0]);
-    center[1] = Math.max(lon, center[1]);
-    center[2] = Math.min(lat, center[2]);
-    center[3] = Math.max(lat, center[3]);
+    center[0] = Math.min(lat, center[0]);
+    center[1] = Math.min(lon, center[1]);
+    center[2] = Math.max(lat, center[2]);
+    center[3] = Math.max(lon, center[3]);
     return center;
 }
 
