@@ -67,9 +67,9 @@ async function recupereUrl() {
 
             var criteria;
             criteria = { "resources.metadata.modes": "bus" };
-            criteria = { "id": "55ffbe0888ee387348ccb97d" };//brest
+            //criteria = { "id": "55ffbe0888ee387348ccb97d" };//brest
             //criteria = { "id": "61fd32feaa59c5ebde258f2d" };//Quimper Bretagne Occidentale
-            
+            //criteria = { "id": "5d1081696f444106b5aae5c7" };
             //criteria = {};
             //a faire 620c150a0171135d9b35ecc6
             //a faire 6036e9df9d7c9b462c7ce5a4
@@ -77,11 +77,11 @@ async function recupereUrl() {
 
             /*criteria = { "id": {$in: ["55ffbe0888ee387348ccb97d"
             , "56b0c2fba3a7294d39b88a86"
-            , "5c34c93f8b4c4104b817fb3a"
+            , "5c34c93f8b4c4104b817fb3a"//st etienne
             , "5f11962cc694e04ea707f124"
             , "5de42c4d8b4c417a10e62ec9"
             , "5cedcdd106e3e72f1eb31ef9"
-            , "5cedcdcd06e3e72f1eb31ef4"
+            , "5cedcdcd06e3e72f1eb31ef4" //périgueux
             
             ] } }*/
 
@@ -89,7 +89,7 @@ async function recupereUrl() {
                 if (err) {
                     console.log("err: " + err);
                 }
-                //lstCircuits = lstCircuits.slice(10);
+                lstCircuits = lstCircuits.slice(125);
                 for (i in lstCircuits) {
                     let circuit = lstCircuits[i];
                     if (circuit.resources) {
@@ -238,17 +238,20 @@ async function loadAndDezip(url, file, id) {
  * @param {*} mapUrl 
  */
 async function loadReseauxInDB(mapUrl) {
-    await modelRepo.reInitCollections();//suppression des données existantes
+    
     let i=0;
     for (const [id, urlReseau] of mapUrl) {
         let rep = ressource + id;
         i++;
-        log(i + " ********************************** Circuit: " + urlReseau.title);
+        log((i +  "/" + mapUrl.length) + " ********************************** Circuit: " + urlReseau.title);
+        let criteria  = { "id": id };
+        await modelRepo.reInitCollections(criteria);//suppression des données existantes
         await analyseRep(rep, urlReseau);
         await consolidationTrajet(id, mapUrl);
         await modelRepo.reInitCollectionsTemp();//suppression des table temporaires utiliser pour le calcul précedent 
+        await insertDbBasic('reseau-descs', mapUrl.get(id));
     }
-    await insertDbBasic('reseau-descs', Array.from(mapUrl.values()));
+    //await insertDbBasic('reseau-descs', Array.from(mapUrl.values()));
     endTime();
 }
 
@@ -286,15 +289,21 @@ async function analyseRep(rep, urlReseau) {
     });
 }
 
-
-
+/**
+ * Transformation d'un fichier csv en json
+ */
 function csvToJson(titre, contenu) {
     try {
+        if (contenu.trim() == ""){
+            return;
+        }
         let tabTitre = titre.replace("o;?", "").replace(/(\r\n|\n|\r)/gm, "").trim().split(",");
         let tabContenu = contenu.replaceAll("o;?", "").replace(/(\r\n|\n|\r)/gm, "").trim().split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
         let result = "{";
         for (i in tabTitre) {
-            result += "\"" + tabTitre[i] + "\":\"" + tabContenu[i].replaceAll("\"", "") + "\",";
+            if (tabContenu[i]){
+                result += "\"" + tabTitre[i].replaceAll("\"", "") + "\":\"" + tabContenu[i].replaceAll("\"", "") + "\",";
+            }
         }
         result = result.substring(0, result.length - 1); //on enleve la derniere ","
         result += "}";
@@ -323,7 +332,10 @@ async function analyseFichier(fileName, urlReseau, model) {
                 if (numLigne == 1) {
                     premiereLigne = line.toString('ascii');
                 } else {
-                    fichierJson.push(csvToJson(premiereLigne, line.toString()));
+                    let contenu = csvToJson(premiereLigne, line.toString());
+                    if (contenu){
+                        fichierJson.push(contenu);
+                    }
                 }
 
                 numLigne++;

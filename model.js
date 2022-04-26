@@ -701,7 +701,8 @@ function initMapF(){
 
     mapF.set('calendar.txt', 'calendars');
     mapF.set('calendar_dates.txt', 'calendar_dates');
-    mapF.set('fare_attributes.txt', 'fare_attributes');
+
+    /*mapF.set('fare_attributes.txt', 'fare_attributes');
     mapF.set('fare_rules.txt', 'fare_rules');
 
 
@@ -737,11 +738,12 @@ function mapModel(){
 /**
  * Suppression de tous les enregistrements de  toutes les collections
  */
-async function reInitCollections(){
+async function reInitCollections(criteria){
     let mapM = mapModel();
-    let criteria = {};
+    //let criteria = {};
     //criteria = {"id": "55ffbe0888ee387348ccb97d"};
-    criteria = { "id": "61fd32feaa59c5ebde258f2d" };
+    //criteria = { "id": "61fd32feaa59c5ebde258f2d" };
+    console.log(criteria);
     for (const collectionName of mapF.values()){
         await deleteModel(mapM.get(collectionName), collectionName,criteria);
     }
@@ -764,9 +766,9 @@ function deleteModel(model, collectionName, criteria){
     return new Promise((resolve, reject)=>{
         model.deleteMany(criteria, function(err, delOK) {
             if (err) 
-                reject();
+                reject(console.log("delete Error : " + err.message));
             if (delOK) 
-                resolve(console.log("Collection "+ collectionName + " deleted"));
+                resolve(console.log("Collection "+ collectionName + ", id=" + criteria.id + ",nb deleted: " + delOK.deletedCount));
         });
     })
 }
