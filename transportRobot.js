@@ -11,16 +11,18 @@ var modelRepo = require('./model');
 var ressource = "ressources/";
 var PersistentCircuitModel;
 var dateDeb = new Date();
-const csvtojson = require('csvtojson');
 
 //a exporter dans un autre fichier
 class UrlReseau {
     title;
+    name;
     id;
     url;
     rt;
     nbRoutes;
     center;
+    idPosition = [];
+    coord = [];
 }
 class Trajet {
     id;
@@ -89,7 +91,7 @@ async function recupereUrl() {
                 if (err) {
                     console.log("err: " + err);
                 }
-                lstCircuits = lstCircuits.slice(125);
+                
                 for (i in lstCircuits) {
                     let circuit = lstCircuits[i];
                     if (circuit.resources) {
@@ -133,7 +135,8 @@ async function recupereUrl() {
                             }
                             let urlReseau = mapUrl.get(id)
                             urlReseau.id = id;
-                            urlReseau.title = circuit.title  + (circuit.aom?(" <br> " + circuit.aom.name):"");
+                            urlReseau.title = circuit.title;
+                            urlReseau.name = circuit.aom?circuit.aom.name:null;
                             urlReseau.url = circuit.resources[numResourceSave][0].original_url;
 
                             numResourceSave = -1;//on reinitialise la varible pour le prochain
@@ -390,8 +393,8 @@ function calculIdPosition(lat, lon) {
     lat = Number(lat) + 90;//+90 pour n'avoir que des valeur positive
     lon = Number(lon) + 180;// +180 pour n'avoir que des valeur positive
     let idPosition;
-    let sLat = "" + (Math.floor(lat * 10));
-    let sLon = "" + (Math.floor(Math.floor(Math.floor(lon * 10) / 2)) * 2);
+    let sLat = "" + (Math.floor(Math.floor(Math.floor(lat * 10) / 2)) * 2);
+    let sLon = "" + (Math.floor(Math.floor(Math.floor(lon * 10) / 6)) * 6);
 
     idPosition = sLat + sLon;
     return idPosition;
@@ -444,7 +447,6 @@ async function consolidationTrajet(id, mapUrl) {
         let RoutesCollec = map.get("routes");
 
         let criteriaRoute;
-        //criteriaRoute = { id: "56b0c2fba3a7294d39b88a86" };
         criteriaRoute = { "id": id };
         log("consolidation reseaux: " + id);
         try {
@@ -454,17 +456,26 @@ async function consolidationTrajet(id, mapUrl) {
                     console.log("err: " + err);
                 }
                 log("nombre de routes: " + lstRoutes.length);
+                let mapIdPositionTrajet = new Map();
                 for (let numRoute in lstRoutes) {
                     try {
-                        await analyseRoute(lstRoutes[numRoute], numRoute, center);
+                        await analyseRoute(lstRoutes[numRoute], numRoute, center, mapIdPositionTrajet);
                     } catch (err) {
                     }
                 }
                 let centerC = [];
                 centerC.push((center[0] + center[2])/2);
                 centerC.push((center[1] + center[3])/2);
+                mapUrl.get(id).coord = center;
                 mapUrl.get(id).center = centerC;
                 mapUrl.get(id).nbRoutes = lstRoutes.length;
+
+                lstPositionReseau = [];
+                for (const [id, position] of mapIdPositionTrajet) {
+                    lstPositionReseau.push(position);
+                }
+                mapUrl.get(id).idPosition = lstPositionReseau;
+
                 resolve();
             }).clone().catch(error => { throw error });
         } catch (err) {
@@ -473,7 +484,7 @@ async function consolidationTrajet(id, mapUrl) {
     });
 }
 
-async function analyseRoute(route, numRoute, center) {
+async function analyseRoute(route, numRoute, center, mapIdPositionTrajet) {
     return new Promise((resolve, reject) => {
         try {
             let map = modelRepo.mapModel();
@@ -533,11 +544,17 @@ async function analyseRoute(route, numRoute, center) {
                             let mapIdPosition = new Map();
                             for (numStop in trajet.stops) {
                                 let stop = trajet.stops[numStop];
-                                if (!mapIdPosition.get(stop.idPosition)) {
+                                if (!mapIdPosition.get(stop.idPosition)) {//gestion de id de position unique au niveau des trajet
                                     mapIdPosition.set(stop.idPosition, stop.idPosition);
                                     let position = new Pos();
                                     position.pos = stop.idPosition;
                                     trajet.idPosition.push(position);
+                                }
+
+                                if (!mapIdPositionTrajet.get(stop.idPosition)) {//gestion de id de position unique au niveau des trajet
+                                    let position = new Pos();
+                                    position.pos = stop.idPosition;
+                                    mapIdPositionTrajet.set(stop.idPosition, position);
                                 }
                             }
 

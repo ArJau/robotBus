@@ -427,7 +427,7 @@ async function initModels(){
 
 
     let stops = {
-        id : {"type": "string"},
+        id : {"type": "string", index: true},
         stop_id: {"type": "string"},
         level_id : {"type": "string"},
         stop_name : {"type": "string"},
@@ -440,8 +440,8 @@ async function initModels(){
     repoInit(db, 'stops', stops);
 
     let temp_stops = {
-        id : {"type": "string"},
-        stop_id: {"type": "string"},
+        id : {"type": "string", index: true},
+        stop_id: {"type": "string", index: true},
         level_id : {"type": "string"},
         stop_name : {"type": "string"},
         stop_lat : {"type": "number"},
@@ -467,7 +467,7 @@ async function initModels(){
     repoInit(db, 'routes', routes);
 
     let trips = {
-        id : {"type": "string"},
+        id : {"type": "string", index: true},
         route_id: {"type": "string"},
         service_id : {"type": "string"},
         trip_id : {"type": "string"},
@@ -482,10 +482,10 @@ async function initModels(){
     repoInit(db, 'trips', trips);
 
     let temp_trips = {
-        id : {"type": "string"},
-        route_id: {"type": "string"},
+        id : {"type": "string", index: true},
+        route_id: {"type": "string", index: true},
         service_id : {"type": "string"},
-        trip_id : {"type": "string"},
+        trip_id : {"type": "string", index: true},
         trip_headsign : {"type": "string"},
         block_id : {"type": "string"},
         shape_id : {"type": "string"},
@@ -496,7 +496,7 @@ async function initModels(){
         
 
     let stop_times = {
-        id : {"type": "string"},
+        id : {"type": "string", index: true},
         trip_id: {"type": "string"},
         arrival_time : {"type": "string"},
         departure_time : {"type": "string"},
@@ -508,8 +508,8 @@ async function initModels(){
     repoInit(db, 'stop_times', stop_times);
 
     let temp_stop_times = {
-        id : {"type": "string"},
-        trip_id: {"type": "string"},
+        id : {"type": "string", index: true},
+        trip_id: {"type": "string", index: true},
         arrival_time : {"type": "string"},
         departure_time : {"type": "string"},
         stop_id : {"type": "string"},
@@ -569,7 +569,7 @@ async function initModels(){
 
 
     let shapes = {
-        id : {"type": "string"},
+        id : {"type": "string", index: true},
         shape_id: {"type": "string"},
         shape_pt_lat : {"type": "number"},
         shape_pt_lon : {"type": "number"},
@@ -579,7 +579,7 @@ async function initModels(){
     repoInit(db, 'shapes', shapes);
 
     let temp_shapes = {
-        id : {"type": "string"},
+        id : {"type": "string", index: true},
         shape_id: {"type": "string"},
         shape_pt_lat : {"type": "number"},
         shape_pt_lon : {"type": "number"},
@@ -656,7 +656,7 @@ async function initModels(){
     repoInit(db, 'feed_info', feed_info);
 
     let trajets = {
-        id : {"type": "string"},
+        id : {"type": "string", index: true},
         route_id: {"type": "string"},
         route_text_color : {"type": "string"},
         route_color : {"type": "string"},
@@ -671,11 +671,14 @@ async function initModels(){
 
     let descReseau = {
         title: {"type": "string"},
+        name: {"type": "string"},
         id: {"type": "string"},
         url: {"type": "string"},
         rt: {"type": "string"},
         nbRoutes: {"type": "string"},
-        center: []
+        center: [],
+        idPosition: [],
+        coord: []
     };
     repoInit(db, 'reseau-descs', descReseau);
  
