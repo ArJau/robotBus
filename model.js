@@ -678,7 +678,9 @@ async function initModels(){
         nbRoutes: {"type": "string"},
         center: [],
         idPosition: [],
-        coord: []
+        coord: [], 
+        zoom : {"type": "number"},
+        agence: []
     };
     repoInit(db, 'reseau-descs', descReseau);
  

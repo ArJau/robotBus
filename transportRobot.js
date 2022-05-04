@@ -23,6 +23,8 @@ class UrlReseau {
     center;
     idPosition = [];
     coord = [];
+    zoom;
+    agence = [];
 }
 class Trajet {
     id;
@@ -45,6 +47,11 @@ class Stops {
 }
 class Pos {
     pos;
+}
+class Agence {
+    url;
+    tel;
+    name;
 }
 
 async function init() {
@@ -71,7 +78,7 @@ async function recupereUrl() {
             //criteria = { "resources.metadata.modes": "bus" };
             //criteria = { "id": "55ffbe0888ee387348ccb97d" };//brest
             //criteria = { "id": "61fd32feaa59c5ebde258f2d" };//Quimper Bretagne Occidentale
-            criteria = { "id": "5b873d7206e3e76e5b2ffd32" };
+            criteria = { "id": "55ffbe0888ee387348ccb97d" };
             //criteria = {};
             //a faire 620c150a0171135d9b35ecc6
             //a faire 6036e9df9d7c9b462c7ce5a4
@@ -156,7 +163,6 @@ async function recupereUrl() {
                             urlReseau.title = circuit.title;
                             urlReseau.name = circuit.aom?circuit.aom.name:null;
                             urlReseau.url = circuit.resources[numResourceSave][0].original_url;
-
                             numResourceSave = -1;//on reinitialise la varible pour le prochain
                         }
                         //console.log(url);
@@ -211,7 +217,7 @@ async function analyseURL(urlObj) {
                     resolve(log("Le server ne repond pas, id: " + id), true);
                 });
         } catch (err) {
-            resolve(log("erreur, id : " + id + ", url : " + url + ", err : " + err), true);
+            resolve(log("Erreur analyseURL. id : " + id + ", url : " + url + ", err : " + err), true);
         }
 
     })
@@ -479,18 +485,12 @@ async function consolidationTrajet(id, mapUrl) {
                     } catch (err) {
                     }
                 }
-                let centerC = [];
-                centerC.push((center[0] + center[2])/2);
-                centerC.push((center[1] + center[3])/2);
-                mapUrl.get(id).coord = center;
-                mapUrl.get(id).center = centerC;
-                mapUrl.get(id).nbRoutes = lstRoutes.length;
+               
 
-                lstPositionReseau = [];
-                for (const [id, position] of mapIdPositionTrajet) {
-                    lstPositionReseau.push(position);
+                try {
+                    await completeDataReseaux(mapUrl, lstRoutes, id, center, mapIdPositionTrajet);
+                } catch (err) {
                 }
-                mapUrl.get(id).idPosition = lstPositionReseau;
 
                 resolve();
             }).clone().catch(error => { throw error });
@@ -498,6 +498,58 @@ async function consolidationTrajet(id, mapUrl) {
             reject(log(err));
         }
     });
+}
+
+
+async function completeDataReseaux(mapUrl, lstRoutes, id, center, mapIdPositionTrajet) {
+    return new Promise((resolve, reject) => {
+        try {
+            let centerC = [];
+            centerC.push((center[0] + center[2]) / 2);
+            centerC.push((center[1] + center[3]) / 2);
+            mapUrl.get(id).coord = center;
+            mapUrl.get(id).center = centerC;
+            mapUrl.get(id).nbRoutes = lstRoutes.length;
+
+
+            let zoom = Math.ceil(center[2] - center[0]);
+            if (!zoom) {
+                mapUrl.get(id).zoom = 12;
+            } else if (zoom <= 2) {
+                mapUrl.get(id).zoom = 10;
+            } else if (zoom <= 4) {
+                mapUrl.get(id).zoom = 9;
+            } else if (zoom <= 6) {
+                mapUrl.get(id).zoom = 8;
+            } else {
+                mapUrl.get(id).zoom = 6;
+            }
+
+            let lstPositionReseau = [];
+            for (const [i, position] of mapIdPositionTrajet) {
+                lstPositionReseau.push(position);
+            }
+            mapUrl.get(id).idPosition = lstPositionReseau;
+
+            let map = modelRepo.mapModel();
+            let criteriaAgency = { id: id };
+            let agencyCollec = map.get("agencies");
+            agencyCollec.find(criteriaAgency, async function (err, lstAgence) {
+                for (let i in lstAgence) {
+                    let agenceJson = new Agence();
+                    let agency = lstAgence[i];
+                    agenceJson.url = agency.agency_url;
+                    agenceJson.tel = agency.agency_phone;
+                    agenceJson.name = agency.agency_name;
+                    mapUrl.get(id).agence.push(agenceJson);
+                }
+                resolve();
+            });
+        } catch (err) {
+            resolve(log("Erreur completeDataReseaux:" + err));
+        }
+    });
+
 }
 
 async function analyseRoute(route, numRoute, center, mapIdPositionTrajet) {
