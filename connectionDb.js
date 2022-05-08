@@ -1,9 +1,9 @@
 var mongoose = require('mongoose');
-var mongoDbUrl = 'mongodb://127.0.0.1:27017'; //by default
+var mongoDbUrl = 'mongodb://127.0.0.1:27017';
 
 async function initDb(dbName){
     mongoose.connect(mongoDbUrl, { useNewUrlParser: true, useUnifiedTopology: true, dbName : dbName });
-    var db = mongoose.connection;
+    const db = mongoose.connection;
     db.on('error' , function() { 
         console.log("mongoDb connection error = " + " for dbUrl=" + mongoDbUrl  + "/" + dbName);
     });
@@ -13,6 +13,5 @@ async function initDb(dbName){
     });
     return db;
 }
-
 
 module.exports.initDb = initDb;

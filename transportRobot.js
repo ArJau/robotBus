@@ -55,7 +55,6 @@ class Agence {
 }
 
 async function init() {
-
     await modelRepo.initModels();
     var mapUrl = await recupereUrl();
     await loadReseaux(mapUrl);
@@ -69,16 +68,11 @@ async function recupereUrl() {
             let mapUrl = new Map();
             PersistentCircuitModel = map.get("circuits");
 
-            /*circuitRepo.init(
-            function(model){
-                PersistentCircuitModel = model;
-            });*/
-
             var criteria;
-            //criteria = { "resources.metadata.modes": "bus" };
-            //criteria = { "id": "55ffbe0888ee387348ccb97d" };//brest
+            criteria = { "resources.metadata.modes": "bus" };
+            criteria = { "id": "55ffbe0888ee387348ccb97d" };//brest
             //criteria = { "id": "61fd32feaa59c5ebde258f2d" };//Quimper Bretagne Occidentale
-            criteria = { "id": "55ffbe0888ee387348ccb97d" };
+            //criteria = { "id": "5dfa54b46f44417bc185117a" };
             //criteria = {};
             //a faire 620c150a0171135d9b35ecc6
             //a faire 6036e9df9d7c9b462c7ce5a4
@@ -86,30 +80,6 @@ async function recupereUrl() {
             /*criteria = { "id": {$in: [
             "600175b2496819e24a71a80c",
             "615fd9d5bbb0c1c35fe86fe3"
-            ,"5f463e699aeedb9606f6dd57"
-            ,"5d80dfdc6f444123af85dbc8"
-            ,"5fbd322e32bda59e482719f4"
-            ,"5fe3677417a49c5d305bd290" 
-            ,"5a6f2ae8c751df6d2358936b" 
-            ,"580a574aa3a7292dcfa9d1da" 
-            ,"5cec026c634f415f64fc9715" 
-            ,"5f900525ff6a4d20bc9c08a7" 
-            ,"5bec4c588b4c4165a5e3d43d" 
-            ,"5f46415406569a004a684d29" 
-            ,"5f889c86918b2aca56e3bf69" 
-            ,"601033a9f8ef84fd317562ae" 
-            ,"5f8ffb646e64e601f312facd" 
-            ,"580defb1a3a7292dcfa9d33f" 
-            ,"5dfa54b46f44417bc185117a" 
-            ,"5b11435b88ee387a7f45434c" 
-            ,"5e6a099a634f4126d8ee8575" 
-            ,"5f6a06b05bcf2b29aa40083d" 
-            ,"5bb493b18b4c417d7f3f6b05" 
-            ,"5f46413facfbda2f02b49bea" 
-            ,"60a50049fb874038a79867df" 
-            ,"5c0933e88b4c4177a394acd1" 
-            ,"614313adf6d0ad32ac2a92c4" 
-            ,"5b873d7206e3e76e5b2ffd32" 
             ] } }*/
 
             PersistentCircuitModel.find(criteria, async function (err, lstCircuits) {
@@ -268,7 +238,7 @@ async function loadReseauxInDB(mapUrl) {
     for (const [id, urlReseau] of mapUrl) {
         let rep = ressource + id;
         i++;
-        log((i +  "/" + mapUrl.length) + " ********************************** Circuit: " + urlReseau.title);
+        log((i +  "/" + mapUrl.size) + " ********************************** Circuit: " + urlReseau.title);
         let criteria  = { "id": id };
         await modelRepo.reInitCollections(criteria);//suppression des données existantes
         await analyseRep(rep, urlReseau);
@@ -377,7 +347,7 @@ async function analyseFichier(fileName, urlReseau, model) {
         }
         catch (er) {
             log("DB ERROR" + model + ",id: " + urlReseau.id + " fileName=" + fileName + ", er:" + er, true)
-            reject();
+            resolve();
         }
     });
 }
@@ -405,7 +375,7 @@ async function insertFichierDB(fileName, urlReseau, model, tableauJson) {
             }
             resolve();
         } catch (err) {
-            log("ERROR insertFichierDB: " + err.err);
+            log("ERROR insertFichierDB: " + err.err, true);
             resolve();
         }
     });
@@ -434,7 +404,7 @@ async function insertDb(fileName, id, model, tableauJson) {
         let mapModelRepo = modelRepo.mapModel();
         mapModelRepo.get(model).insertMany(tableauJson, async (err, result) => {
             if (err) {
-                reject({ err: err });
+                resolve({ err: err });
             } else {
                 log("CSV " + model + ",lignes:," + result.length + ", id: " + id + ", fileName=" + fileName, true);
                 resolve();
