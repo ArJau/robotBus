@@ -1,5 +1,4 @@
 var mongoose = require('mongoose');
-var connectionDb = require('../connectionDb');
 
 var db;
 
@@ -7,7 +6,6 @@ var genericShema;//mongoose Shcema (structure of mongo document)
 var PersistentModel; //mongoose Model (constructor of persistent PersistentCircuitModel)
 
 var init = function(db, collectionName, jsonShema ,  callbackWithPersistentModel) {
-    //db = connectionDb.initDb(dbName);
     mongoose.Connection = db;
     genericShema = new mongoose.Schema(jsonShema);
     //genericShema.set('id',false); //no default virtual id alias for _id

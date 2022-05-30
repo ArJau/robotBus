@@ -3,6 +3,8 @@ var connectionDb = require('./connectionDb');
 
 var mapM = new Map();//nom du model => model persistant mongo
 var mapF = new Map();//map nom du fichier => nom du model
+
+var mapFsql = new Map();//map nom du fichier => nom du model
 var mapTempF = new Map();
 var dbName = "TransportHoraire";
 
@@ -720,8 +722,37 @@ function initMapF(){
     mapF.set('attributions.txt', 'attributions');*/
 }
 
+function initMapFsql(){
+    mapFsql.set('agency.txt', 'agency');
+
+    mapFsql.set('routes.txt', 'routes');
+    mapFsql.set('stops.txt', 'stops');
+    mapFsql.set('trips.txt', 'trips');
+    mapFsql.set('stop_times.txt', 'stoptimes');
+    mapFsql.set('shapes.txt', 'shapes');
+
+    mapFsql.set('calendar.txt', 'calendars');
+    mapFsql.set('calendar_dates.txt', 'calendardates');
+
+    /*mapFsql.set('fare_attributes.txt', 'fare_attributes');
+    mapFsql.set('fare_rules.txt', 'fare_rules');
+
+
+    /*mapFsql.set('pathways.txt', 'pathways');
+    mapFsql.set('frequencies.txt', 'frequencies');
+    mapFsql.set('transfers.txt', 'transfers');*/
+   
+    /*mapFsql.set('levels.txt', 'levels');
+    mapFsql.set('translations.txt', 'translations');
+    mapFsql.set('attributions.txt', 'attributions');*/
+}
+
 function mapFichier(){
     return mapF;
+}
+
+function mapFichierSql(){
+    return mapFsql;
 }
 
 function initMapTempF(){
@@ -780,10 +811,12 @@ function deleteModel(model, collectionName, criteria){
 
 
 initMapF();
+initMapFsql();
 initMapTempF();
 
 module.exports.mapModel=mapModel;
 module.exports.mapFichier=mapFichier;
+module.exports.mapFichierSql=mapFichierSql;
 module.exports.mapFichierTemp=mapFichierTemp;
 module.exports.reInitCollections=reInitCollections;
 module.exports.reInitCollectionsTemp=reInitCollectionsTemp;

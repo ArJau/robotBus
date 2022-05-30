@@ -28,10 +28,9 @@ var tabColor = [
 async function init() {
     await modelRepo.initModels();
     var mapUrl = await recupereUrl();
+    dbMySql = await connectionDbMysql.initDbMysql();
     //await loadReseaux(mapUrl);
-    //await loadReseauxInDB(mapUrl);
-
-    dbMySql = connectionDbMysql.initDbMysql();
+    await loadReseauxInDB(mapUrl);
     
 }
 
@@ -43,8 +42,8 @@ async function recupereUrl() {
             PersistentCircuitModel = map.get("circuits");
 
             var criteria;
-            criteria = { "resources.metadata.modes": "bus" };
-            //criteria = { "id": "55ffbe0888ee387348ccb97d" };//brest
+            //criteria = { "resources.metadata.modes": "bus" };
+            criteria = { "id": "55ffbe0888ee387348ccb97d" };//brest
             //criteria = {"id": "5cedcdca9ce2e74f4ec3af03"};//test
             //criteria = { "id": "61fd32feaa59c5ebde258f2d" };//Quimper Bretagne Occidentale
             //criteria = { "id": "5dfa54b46f44417bc185117a" };
@@ -214,12 +213,10 @@ async function loadReseauxInDB(mapUrl) {
         let rep = ressource + id;
         i++;
         log((i +  "/" + mapUrl.size) + " ********************************** Circuit: " + urlReseau.title, true);
-        let criteria  = { "id": id };
-        await modelRepo.reInitCollections(criteria);//suppression des données existantes
         await analyseRep(rep, urlReseau);
-        await consolidationTrajet(id, mapUrl);
-        await modelRepo.reInitCollectionsTemp();//suppression des table temporaires utiliser pour le calcul précedent 
-        await insertDbBasic('reseau-descs', mapUrl.get(id));
+        //await consolidationTrajet(id, mapUrl);
+        //await modelRepo.reInitCollectionsTemp();//suppression des table temporaires utiliser pour le calcul précedent 
+        //await insertDbBasic('reseau-descs', mapUrl.get(id));
     }
     //await insertDbBasic('reseau-descs', Array.from(mapUrl.values()));
     endTime();
@@ -240,12 +237,13 @@ async function analyseRep(rep, urlReseau) {
     return new Promise(async (resolve, reject) => {
         try {
             if (fs.existsSync(rep)) {
-                let mapModelRepo = modelRepo.mapFichier();
+                let mapModelRepo = modelRepo.mapFichierSql();
                 let fichiers = Array.from(mapModelRepo.keys());
                 for (let i in fichiers) {
                     log("analyse du fichier: " + fichiers[i])
                     let fileName = rep + "/" + fichiers[i];
                     if (fs.existsSync(fileName)) {
+                        await reInitCollections(fileName, urlReseau, mapModelRepo.get(fichiers[i]));//suppression des données existantes
                         await analyseFichier(fileName, urlReseau, mapModelRepo.get(fichiers[i]));
                     }
                 }
@@ -259,30 +257,19 @@ async function analyseRep(rep, urlReseau) {
     });
 }
 
-/**
- * Transformation d'un fichier csv en json
- */
-function csvToJson(titre, contenu) {
-    try {
-        if (contenu.trim() == ""){
-            return;
-        }
-        let tabTitre = titre.replace("o;?", "").replace(/(\r\n|\n|\r)/gm, "").trim().split(",");
-        let tabContenu = contenu.replaceAll("o;?", "").replace(/(\r\n|\n|\r)/gm, "").trim().split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-        let result = "{";
-        for (i in tabTitre) {
-            if (tabContenu[i]){
-                result += "\"" + tabTitre[i].replaceAll("\"", "") + "\":\"" + tabContenu[i].replaceAll("\"", "") + "\",";
-            }
-        }
-        result = result.substring(0, result.length - 1); //on enleve la derniere ","
-        result += "}";
-        return JSON.parse(result);
-    } catch (err) {
-        log("Error parsing CSV titre: " + titre + ". contenu:" + contenu)
-    }
-
+async function reInitCollections(fileName, urlReseau, table){
+    let sql = "delete from " + table + " where " + table + "_reseau_id = '" + urlReseau.id + "'";
+    return new Promise(async (resolve, reject) => {
+        dbMySql.query(sql, function(err, result){
+            if (err)
+                log("Erreur reInitCollections. fileName: " + fileName + ", id : " + urlReseau.id + ", table: " + table+ ", mes:  " + err, true);
+            else 
+                log("Table: " + table + ", Nb ligne supprimées: " + result.affectedRows + ", fileName: " + fileName + ", id : " + urlReseau.id);
+            resolve();
+        });
+    });
 }
+
 /**
  * Import du fichier en base de donnée. 
  * Chaque fichier est découpé en bloc de 20000 lignes pour etre inseré en base pour éviter les problemes de mémoires
@@ -290,118 +277,84 @@ function csvToJson(titre, contenu) {
  * @param {*} id 
  * @param {*} model 
  */
-async function analyseFichier(fileName, urlReseau, model) {
+ async function analyseFichier(fileName, urlReseau, table) {
     return new Promise(async (resolve, reject) => {
         try {
-            let premiereLigne = "";
             const broadbandLines = new nReadlines("./" + fileName);
-            fichierJson = [];
+            let values = [];
+            let fields = [];
             let line;
             let numLigne = 1;
             while (line = broadbandLines.next()) {
                 if (numLigne == 1) {
-                    premiereLigne = line.toString('ascii');
-                } else {
-                    let contenu = csvToJson(premiereLigne, line.toString());
-                    if (contenu){
-                        fichierJson.push(contenu);
+                    fields = line.toString('utf8').replace("o;?", "").replace(/(\r\n|\n|\r)/gm, "").trim().split(",");
+                    for (let i in fields){
+                        fields[i] = table + "_" + fields[i];
                     }
+                    fields[fields.length] = table + "_reseau_id";
+                } else {
+                    let sql = csvToSql(line, urlReseau);
+                    values.push(sql);
                 }
 
                 numLigne++;
-                if (numLigne % 20000 == 0) {
-                    await insertFichierDB(fileName, urlReseau, model, fichierJson);
-                    fichierJson = [];
+                if (numLigne % 500 == 0) {
+                    await insertFichierDB(fileName, urlReseau, table, fields, values);
+                    values = [];
+                    if (numLigne % 5000 == 0) {
+                        log((numLigne-2) + " lignes. Table: " + table + ", fileName: " + fileName + ", id : " + urlReseau.id);
+                    }
                 }
             }
             //si il en reste un peu
-            if (fichierJson.length > 0) {
-                await insertFichierDB(fileName, urlReseau, model, fichierJson);
+            if (values.length > 0) {
+                await insertFichierDB(fileName, urlReseau, table, fields, values);
+                log((numLigne-2) + " lignes. Table: " + table + ", fileName: " + fileName + ", id : " + urlReseau.id);
             }
             resolve();
         }
         catch (er) {
-            log("DB ERROR" + model + ",id: " + urlReseau.id + " fileName=" + fileName + ", er:" + er, true)
+            log("DB ERROR" + table + ",id: " + urlReseau.id + " fileName=" + fileName + ", er:" + er, true)
             resolve();
         }
     });
 }
 
-/**
- * Transforme le fichier csc en json pour l'insérer en base
- * @param {} fileName 
- * @param {*} urlReseau 
- * @param {*} stringFichier 
- * @param {*} model 
- */
-async function insertFichierDB(fileName, urlReseau, model, tableauJson) {
+async function insertFichierDB(fileName, urlReseau, table, fields, values){
     return new Promise(async (resolve, reject) => {
-        try {
-            let mapFileTemp = modelRepo.mapFichierTemp();
-            fileNameCourt = fileName.substring(fileName.lastIndexOf("/") + 1);
-
-            if (mapFileTemp.has(fileNameCourt)) {//enregistrement dans les tables temporaires
-                await insertDb(fileName, urlReseau.id, mapFileTemp.get(fileNameCourt), tableauJson);
-            }
-            if (urlReseau.rt) {//si on est sur un circuit temp réel
-                await insertDb(fileName, urlReseau.id, model, tableauJson);//on enregistre toute les tables
-            } else if (!mapFileTemp.has(fileNameCourt)) {//sinon on enregistre pas les trois tables volumineuse (stops, trips, stop_time) 
-                await insertDb(fileName, urlReseau.id, model, tableauJson);
-            }
+        let sql = insertSql(table, fields, values);
+        dbMySql.query(sql, function(err, result){
+            if (err)
+                log("Erreur insertFichierDB. fileName: " + fileName + ", id : " + urlReseau.id + ", table: " + table+ ", mes:  " + err, true);
+            //else
+            //    log("Table: " + table + ", Nb ligne enregistrée: " + result.affectedRows + ", fileName: " + fileName + ", id : " + urlReseau.id);
             resolve();
-        } catch (err) {
-            log("ERROR insertFichierDB: " + err.err, true);
-            resolve();
-        }
-    });
-}
-
-function calculIdPosition(lat, lon) {
-    lat = Number(lat) + 90;//+90 pour n'avoir que des valeur positive
-    lon = Number(lon) + 180;// +180 pour n'avoir que des valeur positive
-    let idPosition;
-    let sLat = "" + (Math.floor(Math.floor(Math.floor(lat * 10) / 2)) * 2);
-    let sLon = "" + (Math.floor(Math.floor(Math.floor(lon * 10) / 6)) * 6);
-
-    idPosition = sLat + sLon;
-    return idPosition;
-}
-
-async function insertDb(fileName, id, model, tableauJson) {
-    return new Promise((resolve, reject) => {
-        for (let i in tableauJson) {
-            tableauJson[i]["id"] = id;
-            if (model == "stops" | model == "temp_stops") {
-                tableauJson[i]["idPosition"] = calculIdPosition(tableauJson[i].stop_lat, tableauJson[i].stop_lon);
-            }
-        }
-
-        let mapModelRepo = modelRepo.mapModel();
-        mapModelRepo.get(model).insertMany(tableauJson, async (err, result) => {
-            if (err) {
-                resolve({ err: err });
-            } else {
-                log("CSV " + model + ",lignes:," + result.length + ", id: " + id + ", fileName=" + fileName, true);
-                resolve();
-            }
         });
+        
     });
 }
 
-async function insertDbBasic(model, tableauJson) {
-    return new Promise((resolve, reject) => {
-        let mapModelRepo = modelRepo.mapModel();
-        mapModelRepo.get(model).insertMany(tableauJson, async (err, result) => {
-            if (err) {
-                reject({ err: err });
-            } else {
-                log("Model " + model + ",lignes:," + result.length, true);
-                resolve();
-            }
-        });
-    });
+function insertSql(table, fields, values){
+    return "insert into " + table + " (" + fields + ") values " + values;
 }
 
+function csvToSql(line, urlReseau) {
+    try {
+        let lineStr = line.toString('utf8').trim();
+        if (lineStr == ""){
+            return;
+        }
+        let values = lineStr.replaceAll("o;?", "").replace(/(\r\n|\n|\r)/gm, "").split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        for (let i in values){
+            values[i] = "'" + values[i].replaceAll("'", "\\'") + "'";
+        }
+        values[values.length] = "'" + urlReseau.id + "'";
+        return "(" + values + ")";
+    } catch (err) {
+        log("Error parsing csvToSql. Line:" + lineStr);
+    }
+
+}
 
 
 /**
@@ -414,31 +367,9 @@ async function consolidationTrajet(id, mapUrl) {
         let RoutesCollec = map.get("routes");
 
         let criteriaRoute;
-        criteriaRoute = { "id": id };
         log("consolidation reseaux: " + id);
         try {
-            let center = [];
-            RoutesCollec.find(criteriaRoute, async function (err, lstRoutes) {//on récupere toutes les routes
-                if (err) {
-                    console.log("err: " + err);
-                }
-                log("nombre de routes: " + lstRoutes.length);
-                let mapIdPositionTrajet = new Map();
-                for (let numRoute in lstRoutes) {
-                    try {
-                        await analyseRoute(lstRoutes[numRoute], numRoute, center, mapIdPositionTrajet);
-                    } catch (err) {
-                    }
-                }
-               
-
-                try {
-                    await completeDataReseaux(mapUrl, lstRoutes, id, center, mapIdPositionTrajet);
-                } catch (err) {
-                }
-
-                resolve();
-            }).clone().catch(error => { throw error });
+            
         } catch (err) {
             reject(log(err));
         }
@@ -500,110 +431,9 @@ async function completeDataReseaux(mapUrl, lstRoutes, id, center, mapIdPositionT
 async function analyseRoute(route, numRoute, center, mapIdPositionTrajet) {
     return new Promise((resolve, reject) => {
         try {
-            let map = modelRepo.mapModel();
-            let TripsCollec = map.get("temp_trips");
-            let StopTimesCollec = map.get("temp_stop_times");
-            let StopsCollec = map.get("temp_stops");
-            let shapesCollec = map.get("temp_shapes");
-            //if (route.route_short_name == "15") {
 
-            let criteriaTrip = { id: route.id, route_id: route.route_id };
-            TripsCollec.find(criteriaTrip, async function (err, lstTrips) {//on récupere le premier trip de chaque route
-                let trip = lstTrips[0];
-                //log("trip.trip_headsign : " + trip.trip_headsign);
-                if (trip) {
-                    let criteriaStopTimes = { id: route.id, trip_id: trip.trip_id };
-                    StopTimesCollec.find(criteriaStopTimes, async function (err, lstStopsTime) {//on recupere tous les stops du trip
-                        //log(numRoute + " : route.route_long_name : " + route.route_long_name)
-                        let mapStopsStopTime = new Map();
-                        for (let numStopTime in lstStopsTime) {//on boucle sur chaque stopTime 
-                            let stopsTime = lstStopsTime[numStopTime];
-                            mapStopsStopTime.set(stopsTime.stop_sequence, stopsTime.stop_id);//sert pour garder l'ordre des stops
-                        }
-                        //log("stopTime.stop_sequence : " + stopTime.stop_sequence);
 
-                        let criteriaStop = { id: route.id, stop_id: { $in: Array.from(mapStopsStopTime.values()) } };
-                        StopsCollec.find(criteriaStop, async function (err, lstStop) {//pour enfin recuperer chaque stop
-                            let trajet = new Trajet();
-                            //trajet.id = route.id;
-                            trajet.route_id = route.route_id;
-                            trajet.route_long_name = route.route_long_name;
-                            trajet.route_short_name = route.route_short_name;
-                            trajet.route_text_color = route.route_text_color;
-                            if (route.route_color){
-                                trajet.route_color = route.route_color;
-                            }else{//si pas de couleur on en choisi une c'est plus joli.
-                                trajet.route_color = tabColor[Math.floor(Math.random()*tabColor.length)];
-                            }
 
-                            let mapStop = new Map(); //let mapStop = lstStop.map(lstStop.stop_id => lstStop);
-                            for (let numStop in lstStop) {
-                                mapStop.set(lstStop[numStop].stop_id, lstStop[numStop]);//sert pour garder l'ordre des stops
-                            }
-
-                            for (let numStopTime in lstStopsTime) {
-                                let stop = mapStop.get(mapStopsStopTime.get(lstStopsTime[numStopTime].stop_sequence));
-                                if (stop) {
-                                    let stops = new Stops();
-                                    //stops.id = stop.id;
-                                    //log("    " + lstStopsTime[numStopTime].stop_sequence + ": " + stop.stop_name)
-                                    stops.stop_name = stop.stop_name;
-                                    stops.idPosition = calculIdPosition(stop.stop_lat, stop.stop_lon);
-                                    stops.stop_id = stop.stop_id;
-                                    stops.stop_lat = stop.stop_lat;
-                                    stops.stop_lon = stop.stop_lon;
-                                    stops.stop_sequence = mapStopsStopTime.get(stop.stop_id);
-                                    center = calculCenter(center, stop.stop_lat, stop.stop_lon);
-                                    if(!trajet.stops)
-                                        trajet.stops = [];
-                                    trajet.stops.push(stops);
-                                }
-                            }
-
-                            let mapIdPosition = new Map();
-                            for (numStop in trajet.stops) {
-                                let stop = trajet.stops[numStop];
-                                if (!mapIdPosition.get(stop.idPosition)) {//gestion de id de position unique au niveau des trajet
-                                    mapIdPosition.set(stop.idPosition, stop.idPosition);
-                                    let position = new Pos();
-                                    position.pos = stop.idPosition;
-                                    trajet.idPosition.push(position);
-                                }
-
-                                if (!mapIdPositionTrajet.get(stop.idPosition)) {//gestion de id de position unique au niveau des trajet
-                                    let position = new Pos();
-                                    position.pos = stop.idPosition;
-                                    mapIdPositionTrajet.set(stop.idPosition, position);
-                                }
-                            }
-
-                            let criteriaShape = { id: route.id, shape_id: trip.shape_id };
-                            await shapesCollec.find(criteriaShape, function(err, lstShape){//on récupere la shape, si elle existe
-                                for (let numShape in lstShape) {
-                                    let shape = lstShape[numShape];
-                                    trajet.shapes.push([shape.shape_pt_lat, shape.shape_pt_lon]);//tableau de coord décrivant la forme de la route
-                                }
-                            }).clone().sort({ shape_pt_sequence: -1 }).catch(error => { throw error });
-
-                            let criteriaStopRoute = { stop_id: lstStop[i].stop_id, shape_id: trip.shape_id };
-                            await StopTimesCollec.find(criteriaStopRoute, async function (err, lstStopsTime) {
-                            });
-
-                            let lstTrajet = [];
-                            lstTrajet.push(trajet);
-                            insertDb(numRoute + " : long_name : " + route.route_long_name, route.id, "trajets", lstTrajet);
-                            return resolve(true);
-                        }).clone().catch(error => { throw error });
-                    }).clone().sort({ stop_sequence: -1 }).catch(error => { throw error });
-                } else {
-                    return resolve(true);
-                }
-            }).clone().limit(1).catch(error => { throw error });
-
-            /*}
-            else {
-                reject(false);
-            }*/
         } catch (err) {
             reject(log(err));
         }

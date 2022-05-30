@@ -13,7 +13,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}\\transportRobot.js"
+            "program": "${workspaceFolder}\\transportRobotSQL.js"
         }
     ]
 }
